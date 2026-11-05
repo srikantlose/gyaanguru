@@ -1,7 +1,8 @@
 "use client"
 
 import { useRef, useState } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card"
+import { SectionTitle } from "@/components/section-title"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -92,7 +93,7 @@ export default function ProfileForm({ initialData }: { initialData?: Partial<Onb
         <Alert>
           <AlertTitle>Database migration required</AlertTitle>
           <AlertDescription>
-            Missing columns on profiles. Please run scripts/005_fix_onboarding_schema.sql to proceed.
+            Missing columns on profiles. Please run scripts/schema.sql to proceed.
           </AlertDescription>
         </Alert>
       )}
@@ -106,7 +107,7 @@ export default function ProfileForm({ initialData }: { initialData?: Partial<Onb
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-balance">Academic Background</CardTitle>
+          <SectionTitle n={1}>Academic Background</SectionTitle>
           <CardDescription>Tell us about your education.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2">
@@ -151,7 +152,7 @@ export default function ProfileForm({ initialData }: { initialData?: Partial<Onb
 
       <Card>
         <CardHeader>
-          <CardTitle>Prior Skills</CardTitle>
+          <SectionTitle n={2}>Prior Skills</SectionTitle>
           <CardDescription>Existing skills or certifications.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
@@ -178,7 +179,7 @@ export default function ProfileForm({ initialData }: { initialData?: Partial<Onb
 
       <Card>
         <CardHeader>
-          <CardTitle>Socio-Economic</CardTitle>
+          <SectionTitle n={3}>Socio-Economic</SectionTitle>
           <CardDescription>Context that affects learning access.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2">
@@ -223,7 +224,7 @@ export default function ProfileForm({ initialData }: { initialData?: Partial<Onb
 
       <Card>
         <CardHeader>
-          <CardTitle>Learning Preferences</CardTitle>
+          <SectionTitle n={4}>Learning Preferences</SectionTitle>
           <CardDescription>How you prefer to learn.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 md:grid-cols-2">
@@ -268,7 +269,7 @@ export default function ProfileForm({ initialData }: { initialData?: Partial<Onb
 
       <Card>
         <CardHeader>
-          <CardTitle>Aspirations</CardTitle>
+          <SectionTitle n={5}>Aspirations</SectionTitle>
           <CardDescription>Your goals and target roles.</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">

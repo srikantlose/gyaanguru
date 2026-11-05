@@ -25,26 +25,32 @@ export default async function RoadmapPage({ params }: { params: Promise<{ id: st
   }
 
   return (
-    <main className="min-h-screen py-12">
+    <main className="py-10 sm:py-12">
       <div className="container mx-auto px-4">
         <div className="mx-auto max-w-6xl">
           {typeof roadmap.nsqf_level === "number" && (
-            <div className="mb-6 rounded-lg border bg-background p-4">
-              <div className="mb-1 text-sm font-medium text-muted-foreground">NSQF Alignment</div>
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center rounded-full border px-3 py-1 text-sm">
-                  NSQF Level {roadmap.nsqf_level}
-                </span>
-                {roadmap.content?.nsqf?.mapping?.exampleJobRoles?.length ? (
-                  <span className="text-sm text-muted-foreground">
-                    Roles: {roadmap.content.nsqf.mapping.exampleJobRoles.slice(0, 3).join(", ")}
-                  </span>
-                ) : null}
+            <section
+              aria-label="NSQF alignment"
+              className="mb-6 flex flex-col gap-4 rounded-2xl border-2 border-ink bg-marigold-soft p-5 shadow-brut sm:flex-row sm:items-center"
+            >
+              <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border-2 border-ink bg-marigold font-display text-2xl font-black text-ink shadow-soft">
+                L{roadmap.nsqf_level}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-bold uppercase tracking-wider text-marigold-ink">NSQF Alignment</p>
+                <p className="font-display text-lg font-bold text-ink">NSQF Level {roadmap.nsqf_level}</p>
+                {roadmap.nsqf_description && <p className="mt-1 text-sm text-ink/70">{roadmap.nsqf_description}</p>}
               </div>
-              {roadmap.nsqf_description && (
-                <p className="mt-2 text-sm text-muted-foreground">{roadmap.nsqf_description}</p>
-              )}
-            </div>
+              {roadmap.content?.nsqf?.mapping?.exampleJobRoles?.length ? (
+                <div className="flex flex-wrap gap-2 sm:max-w-xs sm:justify-end">
+                  {roadmap.content.nsqf.mapping.exampleJobRoles.slice(0, 3).map((role: string) => (
+                    <span key={role} className="rounded-full border-2 border-ink bg-card px-3 py-0.5 text-sm font-bold text-ink shadow-soft">
+                      {role}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+            </section>
           )}
           <RoadmapVisualization roadmap={roadmap.content} roadmapId={roadmap.id} />
         </div>

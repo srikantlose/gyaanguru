@@ -11,6 +11,8 @@ import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
 import { JobCard } from "./job-card"
 import { cn } from "@/lib/utils"
+import { Info } from "lucide-react"
+import { JobsIllustration } from "@/components/illustrations"
 
 type Job = {
   id: string
@@ -79,7 +81,7 @@ export function JobsFeed({ className }: { className?: string }) {
     <div className={cn("flex flex-col gap-6", className)}>
       <form
         onSubmit={handleSearch}
-        className="grid grid-cols-1 gap-3 md:grid-cols-12 items-end"
+        className="grid grid-cols-1 items-end gap-3 rounded-2xl border-2 border-ink bg-card p-4 shadow-brut md:grid-cols-12 sm:p-5"
         aria-label="Job search"
       >
         <div className="md:col-span-5">
@@ -122,12 +124,15 @@ export function JobsFeed({ className }: { className?: string }) {
       </form>
 
       {warning ? (
-        <Card className="p-3 text-sm text-muted-foreground">
-          {warning} Add ADZUNA_APP_ID and ADZUNA_APP_KEY in Project Settings for live data.
-        </Card>
+        <div className="flex items-start gap-2.5 rounded-xl border-2 border-ink bg-marigold-soft px-4 py-3 text-sm text-ink/80">
+          <Info className="mt-0.5 h-4 w-4 shrink-0 text-marigold-ink" />
+          <span>
+            Showing sample jobs. {warning} Add ADZUNA_APP_ID and ADZUNA_APP_KEY in Project Settings for live data.
+          </span>
+        </div>
       ) : null}
 
-      <div aria-live="polite" aria-busy={isLoading ? "true" : "false"} className="text-sm">
+      <div aria-live="polite" aria-busy={isLoading ? "true" : "false"} className="text-sm font-semibold text-muted-foreground">
         {statusText}
       </div>
 
@@ -144,11 +149,19 @@ export function JobsFeed({ className }: { className?: string }) {
       ) : error ? (
         <Card className="p-4 text-sm text-destructive">Something went wrong fetching jobs. Please try again.</Card>
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {jobs.map((job) => (
-            <JobCard key={job.id} job={job} />
-          ))}
-        </div>
+        jobs.length === 0 ? (
+          <div className="flex flex-col items-center rounded-3xl border-2 border-dashed bg-card/70 px-6 py-12 text-center">
+            <JobsIllustration className="w-48" />
+            <p className="mt-4 font-display text-lg font-bold text-ink">No jobs match that search</p>
+            <p className="mt-1 text-sm text-muted-foreground">Try a broader keyword or a different city.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            {jobs.map((job, i) => (
+              <JobCard key={job.id} job={job} index={i} />
+            ))}
+          </div>
+        )
       )}
     </div>
   )

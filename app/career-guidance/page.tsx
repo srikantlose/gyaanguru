@@ -1,13 +1,18 @@
 import { createServerClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
-import { CareerGuidanceChat } from "@/components/career-guidance-chat"
 import Link from "next/link"
+import { CareerGuidanceChat } from "@/components/career-guidance-chat"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { CareerPathSimulator } from "@/components/career-path-simulator"
 import { ResumeMatcher } from "@/components/resume-matcher"
 import { MicroCredentialBadges } from "@/components/micro-credential-badges"
 import { NsqfRoadmap } from "@/components/nsqf-roadmap"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { PageHeader } from "@/components/page-header"
+import { ChatIllustration } from "@/components/illustrations"
+import { loadLearner } from "@/lib/learner"
+import { computeAchievements } from "@/lib/achievements"
+import { buildRoadmap } from "@/lib/nsqf-path"
 
 export default async function CareerGuidancePage() {
   const supabase = await createServerClient()
@@ -19,127 +24,116 @@ export default async function CareerGuidancePage() {
     redirect("/auth/login")
   }
 
+  const learner = await loadLearner(supabase, user.id)
+  const achievements = computeAchievements(learner)
+  const o = learner.onboarding
+  const goal = learner.goals.targetRole || learner.goals.shortTerm || learner.roadmaps[0]?.title || "career growth"
+  const path = await buildRoadmap({
+    education: o.academicBackground?.highestQualification || "",
+    skills: o.priorSkills?.skills || "",
+    goal,
+  })
+  const nodes = path.path.map((p) => ({
+    nsqfLevel: p.nsqfLevel,
+    course: p.course,
+    jobRole: p.jobRole,
+    qualification: p.qualification,
+    alternatives: p.alternatives,
+  }))
+  const startLevel = learner.currentLevel ?? path.learner.startLevel
+
   return (
-    <main className="min-h-screen bg-gradient-to-br from-purple-50 via-background to-purple-50/30">
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-5xl mx-auto">
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent mb-2">
-              Career Guidance
-            </h1>
-            <p className="text-muted-foreground text-lg">
-              Tools for learners, trainers, and policymakers: RAG Chatbot, Career Path Simulator, NSQF Progress Tracker,
-              Micro-credential Badges, and an AI-Powered Resume Matcher.
-            </p>
-          </div>
+    <main>
+      <div className="container mx-auto px-4 py-10 sm:py-12">
+        <div className="mx-auto max-w-5xl">
+          <PageHeader
+            eyebrow="Career guidance"
+            tone="leaf"
+            title="Career Guidance"
+            description="Ask questions, compare career paths, track your NSQF level, collect badges and check your resume against roles."
+            art={<ChatIllustration />}
+          />
 
           <Tabs defaultValue="rag-chatbot" className="mb-10">
-            <TabsList className="bg-purple-100/50 dark:bg-purple-950/30">
-              <TabsTrigger
-                value="rag-chatbot"
-                className="data-[state=active]:bg-purple-600 data-[state=active]:text-white"
-              >
-                RAG Chatbot
-              </TabsTrigger>
-              <TabsTrigger
-                value="simulator"
-                className="data-[state=active]:bg-purple-600 data-[state=active]:text-white"
-              >
-                Career Path Simulator
-              </TabsTrigger>
-              <TabsTrigger value="nsqf" className="data-[state=active]:bg-purple-600 data-[state=active]:text-white">
-                NSQF Progress Tracker
-              </TabsTrigger>
-              <TabsTrigger value="badges" className="data-[state=active]:bg-purple-600 data-[state=active]:text-white">
-                Micro-credential Badges
-              </TabsTrigger>
-              <TabsTrigger value="resume" className="data-[state=active]:bg-purple-600 data-[state=active]:text-white">
-                AI-Powered Resume Matcher
-              </TabsTrigger>
+            <TabsList className="mb-2">
+              <TabsTrigger value="rag-chatbot">Career Chat</TabsTrigger>
+              <TabsTrigger value="simulator">Career Path Simulator</TabsTrigger>
+              <TabsTrigger value="nsqf">NSQF Progress Tracker</TabsTrigger>
+              <TabsTrigger value="badges">Badges</TabsTrigger>
+              <TabsTrigger value="resume">Resume Matcher</TabsTrigger>
             </TabsList>
+
             <TabsContent value="rag-chatbot">
               <CareerGuidanceChat />
             </TabsContent>
+
             <TabsContent value="simulator" className="pt-6">
-              <Card id="career-path-simulator" className="border-purple-200 dark:border-purple-800">
+              <Card id="career-path-simulator">
                 <CardHeader>
-                  <CardTitle className="text-purple-700 dark:text-purple-300">Career Path Simulator</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
+                  <CardTitle className="text-xl">Career Path Simulator</CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    Compare &quot;Course A vs Course B&quot; to preview likely career outcomes and salary trend.
+                    Compare two courses or careers: typical roles, salary ranges in India, demand and time to job-ready.
                   </p>
+                </CardHeader>
+                <CardContent>
                   <CareerPathSimulator />
                 </CardContent>
               </Card>
             </TabsContent>
+
             <TabsContent value="nsqf" className="pt-6">
-              <Card id="nsqf-progress" className="border-purple-200 dark:border-purple-800">
+              <Card id="nsqf-progress">
                 <CardHeader>
-                  <CardTitle className="text-purple-700 dark:text-purple-300">NSQF Progress Tracker</CardTitle>
+                  <CardTitle className="text-xl">NSQF Progress Tracker</CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Your path toward &ldquo;{goal}&rdquo;, based on your onboarding answers. Complete the current course to
+                    move up a level.
+                    {!learner.onboarded && (
+                      <>
+                        {" "}
+                        <Link href="/onboarding" className="font-semibold text-primary underline underline-offset-4">
+                          Finish onboarding
+                        </Link>{" "}
+                        for a more accurate path.
+                      </>
+                    )}
+                  </p>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <p className="text-sm text-muted-foreground">
-                    See how close you are to the next NSQF level with an interactive ladder.
-                  </p>
-                  <NsqfRoadmap
-                    initialNodes={[
-                      {
-                        nsqfLevel: 4,
-                        course: "Intro to Data Analysis",
-                        jobRole: "Junior Data Analyst",
-                        qualification: "Certificate",
-                      },
-                      {
-                        nsqfLevel: 5,
-                        course: "Applied Machine Learning",
-                        jobRole: "Data Analyst",
-                        qualification: "Diploma",
-                      },
-                      {
-                        nsqfLevel: 6,
-                        course: "Advanced ML Systems",
-                        jobRole: "ML Engineer",
-                        qualification: "Advanced Diploma",
-                      },
-                    ]}
-                  />
-                  <div className="text-xs text-muted-foreground">
-                    Want a full generator? Visit the{" "}
-                    <Link
-                      href="/nsqf/demo"
-                      className="underline underline-offset-2 text-purple-600 hover:text-purple-700"
-                    >
-                      NSQF Demo
+                  <NsqfRoadmap initialNodes={nodes} learner={{ startLevel }} />
+                  <p className="text-xs text-muted-foreground">
+                    Want an AI-generated pathway? Try the{" "}
+                    <Link href="/nsqf/demo" className="font-semibold text-primary underline underline-offset-4">
+                      NSQF pathway builder
                     </Link>
                     .
-                  </div>
+                  </p>
                 </CardContent>
               </Card>
             </TabsContent>
+
             <TabsContent value="badges" className="pt-6">
-              <Card id="micro-credential-badges" className="border-purple-200 dark:border-purple-800">
+              <Card id="micro-credential-badges">
                 <CardHeader>
-                  <CardTitle className="text-purple-700 dark:text-purple-300">Micro-credential Badges</CardTitle>
+                  <CardTitle className="text-xl">Badges</CardTitle>
+                  <p className="text-sm text-muted-foreground">Earned from your real activity on GyaanGuru.</p>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  <p className="text-sm text-muted-foreground">
-                    Earn verifiable badges when you complete skill clusters; link to your blockchain wallet.
-                  </p>
-                  <MicroCredentialBadges />
+                <CardContent>
+                  <MicroCredentialBadges achievements={achievements} />
                 </CardContent>
               </Card>
             </TabsContent>
+
             <TabsContent value="resume" className="pt-6">
-              <Card id="resume-matcher" className="border-purple-200 dark:border-purple-800">
+              <Card id="resume-matcher">
                 <CardHeader>
-                  <CardTitle className="text-purple-700 dark:text-purple-300">AI-Powered Resume Matcher</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
+                  <CardTitle className="text-xl">Resume Matcher</CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    Upload your CV to see how well it matches trending roles. No data leaves your browser in this demo.
+                    Get a match score for a role, what you&apos;re strong at, what to add, and courses to close the gap.
                   </p>
-                  <ResumeMatcher />
+                </CardHeader>
+                <CardContent>
+                  <ResumeMatcher defaultRole={learner.goals.targetRole} />
                 </CardContent>
               </Card>
             </TabsContent>

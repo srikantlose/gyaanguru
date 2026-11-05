@@ -1,48 +1,90 @@
 import Link from "next/link"
+import { ArrowRight, Briefcase, CheckCircle2, Star } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { HeroIllustration } from "@/components/illustrations"
+import { Parallax } from "@/components/parallax"
+import { HandNote, ScribbleArrow, ScribbleUnderline, Stamp, Sticker } from "@/components/doodles"
 
 export function Hero() {
   return (
-    <section className="relative bg-gradient-to-br from-purple-50 via-white to-purple-100 py-16 dark:from-purple-950/20 dark:via-background dark:to-purple-900/20 sm:py-24">
-      {/* Decorative dots */}
-      <span aria-hidden className="decor-dot left-6 top-6 bg-purple-400" />
-      <span aria-hidden className="decor-dot right-8 top-10 bg-purple-500" />
-      <span aria-hidden className="decor-dot bottom-10 left-10 bg-purple-600" />
+    <Parallax className="relative">
+      <section className="container mx-auto grid items-center gap-12 px-4 pb-14 pt-10 sm:pt-14 lg:grid-cols-[1.05fr_1fr] lg:gap-10 lg:pb-20">
+        <div className="rise-in">
+          <span className="eyebrow -rotate-2 bg-leaf text-ink">NSQF-aligned · built for Bharat</span>
 
-      <div className="container mx-auto px-4">
-        <div className="hero-card mx-auto max-w-3xl text-center">
-          <div>
-            <div className="mb-4">
-              <span className="eyebrow bg-purple-100 text-purple-700 dark:bg-purple-900/50 dark:text-purple-300">
-                AI-Powered Learning Paths
-              </span>
-            </div>
+          <h1 className="mt-6 text-[3.1rem] uppercase leading-[0.92] text-ink [font-stretch:125%] sm:text-7xl lg:text-[5.4rem]">
+            Plan it.
+            <br />
+            Learn it.
+            <br />
+            <span className="relative inline-block">
+              <span className="marker">Level up.</span>
+              <ScribbleUnderline tone="coral" className="-bottom-3" />
+            </span>
+          </h1>
 
-            <h1 className="mb-5 bg-gradient-to-r from-purple-600 to-purple-900 bg-clip-text text-pretty text-5xl font-extrabold tracking-tight text-transparent dark:from-purple-400 dark:to-purple-600 sm:text-6xl">
-              Your Personalized Learning Journey Starts Here
-            </h1>
+          <p className="mt-8 max-w-xl text-lg leading-relaxed text-ink/75">
+            Tell us your goal and how many hours you have each week. GyaanGuru builds a step-by-step roadmap with
+            lessons, quizzes and live jobs, mapped to India&apos;s skills framework.
+          </p>
 
-            <p className="mx-auto mb-8 max-w-2xl text-lg leading-relaxed text-muted-foreground">
-              Generate custom learning roadmaps tailored to your goals and time. Aesthetic, simple, and focused—just
-              like great learning should be.
-            </p>
-
-            <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-              <Button asChild size="lg" className="rounded-full bg-purple-600 hover:bg-purple-700">
-                <Link href="/generate">Generate Your Roadmap</Link>
-              </Button>
-              <Button
-                asChild
-                variant="outline"
-                size="lg"
-                className="rounded-full border-purple-300 bg-transparent hover:bg-purple-50 dark:border-purple-700 dark:hover:bg-purple-950/50"
-              >
-                <Link href="#how-it-works">See How It Works</Link>
-              </Button>
+          <div className="relative mt-8 flex flex-col gap-4 sm:flex-row sm:items-center">
+            <Button asChild size="lg" className="group text-base">
+              <Link href="/generate">
+                Build my roadmap
+                <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+              </Link>
+            </Button>
+            <Button asChild size="lg" variant="outline">
+              <Link href="#how-it-works">See how it works</Link>
+            </Button>
+            <div className="pointer-events-none absolute -bottom-16 left-40 hidden items-start gap-1 sm:flex">
+              <ScribbleArrow tone="coral" className="h-12 w-16 -scale-x-100 rotate-[200deg]" />
+              <HandNote className="mt-6 -rotate-3">free, takes a minute!</HandNote>
             </div>
           </div>
         </div>
-      </div>
-    </section>
+
+        {/* notebook page with the illustration and draggable stickers */}
+        <div className="relative mx-auto w-full max-w-xl lg:max-w-none">
+          <div className="ruled relative rotate-1 rounded-2xl border-2 border-ink bg-card px-6 pb-6 pl-12 pt-10 shadow-lift transition-transform duration-500 hover:rotate-0">
+            {/* red margin + punched holes */}
+            <span aria-hidden className="absolute inset-y-0 left-9 w-[2px] bg-margin" />
+            {[18, 50, 82].map((top) => (
+              <span
+                key={top}
+                aria-hidden
+                className="absolute left-2.5 h-4 w-4 rounded-full border-2 border-ink bg-paper"
+                style={{ top: `${top}%` }}
+              />
+            ))}
+            <HandNote className="absolute left-14 top-3 -rotate-2 text-base text-ink/60">
+              my roadmap — week 1
+            </HandNote>
+            <HeroIllustration title="A learner climbing NSQF level steps toward a flag" />
+          </div>
+
+          <div className="absolute -left-3 top-16 sm:-left-8">
+            <Sticker tone="marigold" rotate={-8} draggable>
+              <Star className="h-4 w-4 fill-ink" /> +5 pts
+            </Sticker>
+          </div>
+          <div className="absolute -right-2 top-1/2 sm:-right-6">
+            <Sticker tone="bubblegum" rotate={7} draggable>
+              <CheckCircle2 className="h-4 w-4" /> Quiz done
+            </Sticker>
+          </div>
+          <div className="absolute -bottom-5 left-1/3">
+            <Sticker tone="lagoon" rotate={-4} draggable>
+              <Briefcase className="h-4 w-4" /> 3 jobs match
+            </Sticker>
+          </div>
+          <Stamp className="absolute -right-4 -top-10 hidden h-24 w-24 rotate-12 sm:block" />
+          <HandNote className="absolute -bottom-12 right-2 hidden rotate-2 text-base text-ink/60 sm:block">
+            psst… drag the stickers ↑
+          </HandNote>
+        </div>
+      </section>
+    </Parallax>
   )
 }

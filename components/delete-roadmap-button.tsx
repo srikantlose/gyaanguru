@@ -40,7 +40,7 @@ export function DeleteRoadmapButton({ roadmapId }: { roadmapId: string }) {
   return (
     <AlertDialog>
       <AlertDialogTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive">
+        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-muted-foreground hover:bg-coral-soft hover:text-coral-ink" aria-label="Delete roadmap">
           <Trash2 className="h-4 w-4" />
         </Button>
       </AlertDialogTrigger>

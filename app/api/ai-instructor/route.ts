@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { createClient } from "@/lib/supabase/server"
-import { generateText } from "@/lib/gemini"
+import { AI_BUSY_MESSAGE, AIUnavailableError, generateText } from "@/lib/gemini"
 
 export async function POST(request: NextRequest) {
   try {
@@ -37,6 +37,9 @@ Keep your response under 200 words.`
 
     return NextResponse.json({ response })
   } catch (error) {
+    if (error instanceof AIUnavailableError) {
+      return NextResponse.json({ error: AI_BUSY_MESSAGE }, { status: 503 })
+    }
     console.error("Error in AI instructor:", error)
     return NextResponse.json({ error: "Failed to generate response" }, { status: 500 })
   }

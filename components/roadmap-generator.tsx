@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Loader2, Sparkles } from "lucide-react"
+import { Loader2, Route, Target } from "lucide-react"
 import { RoadmapVisualization } from "@/components/roadmap-visualization"
 import { useRouter } from "next/navigation"
 
@@ -39,11 +39,13 @@ export function RoadmapGenerator() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [roadmap, setRoadmap] = useState<RoadmapData | null>(null)
   const [roadmapId, setRoadmapId] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsGenerating(true)
+    setError(null)
 
     try {
       const response = await fetch("/api/generate-roadmap", {
@@ -57,11 +59,15 @@ export function RoadmapGenerator() {
         return
       }
 
-      const data = await response.json()
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok || !data.roadmap || !data.roadmapId) {
+        throw new Error(data?.error || "Couldn't generate your roadmap. Please try again.")
+      }
       setRoadmap(data.roadmap)
       setRoadmapId(data.roadmapId)
     } catch (error) {
       console.error("Error generating roadmap:", error)
+      setError(error instanceof Error ? error.message : "Couldn't generate your roadmap. Please try again.")
     } finally {
       setIsGenerating(false)
     }
@@ -83,8 +89,10 @@ export function RoadmapGenerator() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-primary" />
+        <CardTitle className="flex items-center gap-3 text-xl">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-coral-soft text-coral-ink">
+            <Target className="h-5 w-5" />
+          </span>
           Tell Us About Your Learning Goals
         </CardTitle>
         <CardDescription>
@@ -104,6 +112,7 @@ export function RoadmapGenerator() {
             />
           </div>
 
+          <div className="grid gap-5 md:grid-cols-3">
           <div className="space-y-2">
             <Label htmlFor="experience">Current Experience Level</Label>
             <Select
@@ -111,7 +120,7 @@ export function RoadmapGenerator() {
               onValueChange={(value) => setFormData({ ...formData, experience: value })}
               required
             >
-              <SelectTrigger id="experience">
+              <SelectTrigger id="experience" className="w-full">
                 <SelectValue placeholder="Select your experience level" />
               </SelectTrigger>
               <SelectContent>
@@ -125,7 +134,7 @@ export function RoadmapGenerator() {
           <div className="space-y-2">
             <Label htmlFor="goal">What is your goal?</Label>
             <Select value={formData.goal} onValueChange={(value) => setFormData({ ...formData, goal: value })} required>
-              <SelectTrigger id="goal">
+              <SelectTrigger id="goal" className="w-full">
                 <SelectValue placeholder="Select your learning goal" />
               </SelectTrigger>
               <SelectContent>
@@ -145,7 +154,7 @@ export function RoadmapGenerator() {
               onValueChange={(value) => setFormData({ ...formData, hoursPerWeek: value })}
               required
             >
-              <SelectTrigger id="hours">
+              <SelectTrigger id="hours" className="w-full">
                 <SelectValue placeholder="Select hours per week" />
               </SelectTrigger>
               <SelectContent>
@@ -155,6 +164,7 @@ export function RoadmapGenerator() {
                 <SelectItem value="20+">20+ hours</SelectItem>
               </SelectContent>
             </Select>
+          </div>
           </div>
 
           <div className="space-y-2">
@@ -168,15 +178,21 @@ export function RoadmapGenerator() {
             />
           </div>
 
-          <Button type="submit" className="w-full bg-primary text-white" size="lg" disabled={isGenerating}>
+          {error && (
+            <div role="alert" className="rounded-xl border-2 border-ink bg-coral-soft px-4 py-3 text-sm font-semibold text-coral-ink shadow-soft">
+              {error}
+            </div>
+          )}
+
+          <Button type="submit" className="w-full" size="lg" disabled={isGenerating}>
             {isGenerating ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="h-5 w-5 animate-spin" />
                 Generating Your Roadmap...
               </>
             ) : (
               <>
-                <Sparkles className="mr-2 h-4 w-4" />
+                <Route className="h-5 w-5" />
                 Generate My Roadmap
               </>
             )}

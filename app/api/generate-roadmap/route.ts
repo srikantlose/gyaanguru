@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
 import { createClient } from "@/lib/supabase/server"
-import { generateJson } from "@/lib/gemini"
+import { AI_BUSY_MESSAGE, AIUnavailableError, generateJson } from "@/lib/gemini"
 import { clampNsqfLevel, getNsqfMapping } from "@/lib/nsqf"
 
 // The dashboard, RoadmapVisualization and VisualRoadmap all read this shape from roadmaps.content.
@@ -149,6 +149,9 @@ Return ONLY valid JSON, no additional text.`
     console.log("[v0] Successfully generated and saved roadmap")
     return NextResponse.json({ roadmap: roadmapData, roadmapId: savedRoadmap.id })
   } catch (error) {
+    if (error instanceof AIUnavailableError) {
+      return NextResponse.json({ error: AI_BUSY_MESSAGE }, { status: 503 })
+    }
     console.error("Error generating roadmap:", error)
     return NextResponse.json({ error: "Failed to generate roadmap" }, { status: 500 })
   }

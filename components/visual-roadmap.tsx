@@ -47,7 +47,7 @@ function TopicNode({ data }: { data: any }) {
     <div
       className={cn(
         "rounded-lg border-2 bg-background p-4 shadow-lg transition-all hover:shadow-xl min-w-[200px] max-w-[250px]",
-        data.completed && "border-green-500 bg-green-50 dark:bg-green-950",
+        data.completed && "border-leaf bg-leaf-soft",
         !data.completed && data.isModule && "border-primary bg-primary/5",
         !data.completed && !data.isModule && "border-muted-foreground/30",
       )}
@@ -63,7 +63,7 @@ function TopicNode({ data }: { data: any }) {
         {!data.isModule && (
           <div className="mt-0.5 shrink-0">
             {data.completed ? (
-              <CheckCircle2 className="h-5 w-5 text-green-600" />
+              <CheckCircle2 className="h-5 w-5 text-leaf-ink" />
             ) : (
               <Circle className="h-5 w-5 text-muted-foreground" />
             )}
@@ -264,7 +264,7 @@ export function VisualRoadmap({ roadmap, completedTopics, onBack, onTopicSelect 
       <div className="border-t bg-muted/30 px-6 py-3">
         <div className="flex items-center gap-6 text-sm">
           <div className="flex items-center gap-2">
-            <div className="h-3 w-3 rounded-full bg-green-500"></div>
+            <div className="h-3 w-3 rounded-full bg-leaf"></div>
             <span>Completed</span>
           </div>
           <div className="flex items-center gap-2">

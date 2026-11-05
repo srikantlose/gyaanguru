@@ -4,9 +4,15 @@ import type React from "react"
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import { GripVertical } from "lucide-react"
+
+const LEVEL_TONE: Record<number, { soft: string; solid: string }> = {
+  3: { soft: "bg-brand-soft", solid: "bg-brand text-ink border-2 border-ink" },
+  4: { soft: "bg-marigold-soft", solid: "bg-marigold text-ink border-2 border-ink" },
+  5: { soft: "bg-coral-soft", solid: "bg-coral text-ink border-2 border-ink" },
+  6: { soft: "bg-lagoon-soft", solid: "bg-lagoon text-ink border-2 border-ink" },
+}
 
 type Node = {
   nsqfLevel: number
@@ -69,79 +75,79 @@ export function NsqfRoadmap({ initialNodes, learner }: { initialNodes: Node[]; l
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <Badge variant="secondary">Start Level: L{currentLevel}</Badge>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="rounded-full border-2 border-ink bg-marigold px-3 py-0.5 text-sm font-bold text-ink shadow-soft">
+          Start Level: L{currentLevel}
+        </span>
+        <span className="hidden items-center gap-1 text-xs text-muted-foreground sm:flex">
+          <GripVertical className="h-3.5 w-3.5" /> Drag steps to reorder
+        </span>
         <Button size="sm" onClick={handleCompleteCurrent} disabled={saving} className="ml-auto">
           {saving ? "Updating..." : "Complete current course → advance"}
         </Button>
       </div>
 
-      <div className="grid gap-3">
+      <ol className="relative grid gap-3">
         {nodes.map((node, i) => {
           const active = node.nsqfLevel === currentLevel
+          const tone = LEVEL_TONE[node.nsqfLevel] ?? LEVEL_TONE[3]
           return (
-            <div
+            <li
               key={`${node.nsqfLevel}-${node.course}-${i}`}
               draggable
               onDragStart={() => onDragStart(i)}
               onDragOver={(e) => onDragOver(e, i)}
               onDragEnd={onDragEnd}
               className={cn(
-                "rounded-lg border bg-background p-3 transition-colors",
-                active ? "border-primary/60 bg-primary/5" : "hover:bg-muted/40",
+                "group flex cursor-grab gap-3 rounded-2xl border-2 border-ink p-4 transition-all active:cursor-grabbing",
+                tone.soft,
+                active ? "-translate-y-0.5 shadow-lift" : "shadow-soft hover:-translate-y-0.5 hover:shadow-brut",
+                dragIndex === i && "opacity-60",
               )}
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Badge className="shrink-0">L{node.nsqfLevel}</Badge>
-                  <div className="font-semibold">{node.course}</div>
+              <GripVertical className="mt-1 h-5 w-5 shrink-0 text-ink/30 transition-colors group-hover:text-ink/60" aria-hidden />
+              <span
+                className={cn(
+                  "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-ink font-display text-base font-black",
+                  tone.solid,
+                )}
+              >
+                L{node.nsqfLevel}
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
+                  <div className="font-display text-base font-bold text-ink">
+                    {node.course}
+                    {active && (
+                      <span className="ml-2 rounded-full border-2 border-ink bg-marigold px-2 py-0.5 align-middle text-[11px] font-black text-ink">
+                        Current
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-sm font-semibold text-ink/70">{node.jobRole}</div>
                 </div>
-                <div className="text-sm text-muted-foreground">{node.jobRole}</div>
-              </div>
-              <div className="mt-2 text-xs text-muted-foreground">Qualification: {node.qualification || "—"}</div>
-              {node.alternatives && (node.alternatives.courses.length > 0 || node.alternatives.jobRoles.length > 0) && (
-                <div className="mt-2 grid gap-1">
-                  {node.alternatives.courses.length > 0 && (
-                    <div className="text-xs">
-                      Alternatives (Courses):{" "}
-                      {node.alternatives.courses.map((c, idx) => (
-                        <Badge key={idx} variant="outline" className="mr-1">
+                {node.qualification && <div className="mt-1 text-xs text-ink/60">Qualification: {node.qualification}</div>}
+                {(() => {
+                  const extras = [
+                    ...(node.optionalCourses ?? []),
+                    ...(node.alternatives?.courses ?? []),
+                    ...(node.alternatives?.jobRoles ?? []),
+                  ]
+                  return extras.length > 0 ? (
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {extras.map((c, idx) => (
+                        <span key={idx} className="rounded-full bg-card/80 px-2.5 py-0.5 text-xs font-medium text-ink/80">
                           {c}
-                        </Badge>
+                        </span>
                       ))}
                     </div>
-                  )}
-                  {node.alternatives.jobRoles.length > 0 && (
-                    <div className="text-xs">
-                      Alternatives (Jobs):{" "}
-                      {node.alternatives.jobRoles.map((r, idx) => (
-                        <Badge key={idx} variant="outline" className="mr-1">
-                          {r}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-              {node.optionalCourses && node.optionalCourses.length > 0 && (
-                <div className="mt-2 text-xs">
-                  Optional Courses:{" "}
-                  {node.optionalCourses.map((c, idx) => (
-                    <Badge key={idx} variant="outline" className="mr-1">
-                      {c}
-                    </Badge>
-                  ))}
-                </div>
-              )}
-              <Card className="mt-3">
-                <CardContent className="p-3 text-xs text-muted-foreground">
-                  Drag to reorder path. Completing current course updates your NSQF level and unlocks the next step.
-                </CardContent>
-              </Card>
-            </div>
+                  ) : null
+                })()}
+              </div>
+            </li>
           )
         })}
-      </div>
+      </ol>
     </div>
   )
 }

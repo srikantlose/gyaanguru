@@ -1,15 +1,30 @@
 import type React from "react"
-import type { Metadata } from "next"
-import { Baloo_2, Geist_Mono } from "next/font/google"
+import type { Metadata, Viewport } from "next"
+import { Archivo, Figtree, Geist_Mono, Kalam } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 import { Header } from "@/components/header"
-import { Suspense } from "react"
+import { SiteFooter } from "@/components/site-footer"
+import { InteractiveBackground } from "@/components/interactive-background"
 
-const balooSans = Baloo_2({
-  variable: "--font-geist-sans",
+const archivo = Archivo({
+  variable: "--font-archivo",
   subsets: ["latin"],
-  weight: ["400", "600", "700"], // rounded weights for headings/body
+  axes: ["wdth"],
+  display: "swap",
+})
+
+const kalam = Kalam({
+  variable: "--font-kalam",
+  subsets: ["latin", "devanagari"],
+  weight: ["400", "700"],
+  display: "swap",
+})
+
+const figtree = Figtree({
+  variable: "--font-figtree",
+  subsets: ["latin"],
+  display: "swap",
 })
 
 const geistMono = Geist_Mono({
@@ -19,8 +34,11 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "GyaanGuru - Personalized Learning Roadmaps",
-  description: "Generate AI-powered personalized learning roadmaps tailored to your goals and experience level",
-  generator: "v0.app",
+  description: "Personalized, NSQF-aligned learning roadmaps with lessons, quizzes, progress tracking and live jobs.",
+}
+
+export const viewport: Viewport = {
+  themeColor: "#fff8e8",
 }
 
 export default function RootLayout({
@@ -29,17 +47,16 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`${balooSans.variable} ${geistMono.variable}`}>
-      <body className="font-sans">
-        {/* Make sure Header is a client component */}
-        <Suspense fallback={<div>Loading...</div>}>
-          <Header />
-        </Suspense>
-
-        {/* Render the page content */}
-        {children}
-
-        {/* Analytics */}
+    <html
+      lang="en"
+      data-scroll-behavior="smooth"
+      className={`${archivo.variable} ${figtree.variable} ${kalam.variable} ${geistMono.variable}`}
+    >
+      <body className="flex min-h-screen flex-col font-sans">
+        <InteractiveBackground />
+        <Header />
+        <div className="flex-1 overflow-x-clip">{children}</div>
+        <SiteFooter />
         <Analytics />
       </body>
     </html>

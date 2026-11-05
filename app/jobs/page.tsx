@@ -1,4 +1,6 @@
 import { JobsFeed } from "@/components/jobs-feed"
+import { PageHeader } from "@/components/page-header"
+import { JobsIllustration } from "@/components/illustrations"
 
 export const metadata = {
   title: "Jobs in India",
@@ -7,13 +9,14 @@ export const metadata = {
 
 export default function JobsPage() {
   return (
-    <main className="container mx-auto max-w-6xl px-4 py-8">
-      <header className="mb-6 space-y-2">
-        <h1 className="text-3xl font-semibold text-pretty">Jobs in India</h1>
-        <p className="text-muted-foreground">
-          Search the latest roles across India. This feed auto-refreshes every minute.
-        </p>
-      </header>
+    <main className="container mx-auto max-w-6xl px-4 py-10 sm:py-12">
+      <PageHeader
+        eyebrow="Jobs"
+        tone="lagoon"
+        title="Jobs in India"
+        description="Search the latest roles across India. This feed auto-refreshes every minute."
+        art={<JobsIllustration />}
+      />
       <JobsFeed />
     </main>
   )

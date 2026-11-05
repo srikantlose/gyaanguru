@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
 import { createClient } from "@/lib/supabase/server"
-import { ModelOutputError, generateJson } from "@/lib/gemini"
+import { AI_BUSY_MESSAGE, AIUnavailableError, ModelOutputError, generateJson } from "@/lib/gemini"
 
 const ResponseSchema = z.object({
   content: z.array(z.string()).min(1),
@@ -67,6 +67,9 @@ Return ONLY valid JSON in the form:
 
     return NextResponse.json(validated.data)
   } catch (err) {
+    if (err instanceof AIUnavailableError) {
+      return NextResponse.json({ error: AI_BUSY_MESSAGE }, { status: 503 })
+    }
     console.error("[v0] In-depth generation error:", err)
     return NextResponse.json({ error: "Failed to generate in-depth content" }, { status: 500 })
   }

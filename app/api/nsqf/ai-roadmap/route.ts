@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 import { createClient } from "@/lib/supabase/server"
 import { NSQF_MAX_LEVEL, NSQF_MIN_LEVEL, getNsqfMapping } from "@/lib/nsqf"
-import { ModelOutputError, generateJson } from "@/lib/gemini"
+import { AI_BUSY_MESSAGE, AIUnavailableError, ModelOutputError, generateJson } from "@/lib/gemini"
 
 // Schema for strict, type-safe roadmap output
 const nodeSchema = z.object({
@@ -115,6 +115,9 @@ Return ONLY valid JSON matching this TypeScript shape:
 
     return NextResponse.json({ roadmap: parsed.data })
   } catch (err) {
+    if (err instanceof AIUnavailableError) {
+      return NextResponse.json({ error: AI_BUSY_MESSAGE }, { status: 503 })
+    }
     console.error("[v0] AI NSQF (Gemini) generation error:", err)
     return NextResponse.json({ error: "Failed to generate AI NSQF roadmap" }, { status: 500 })
   }

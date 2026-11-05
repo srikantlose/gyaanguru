@@ -87,7 +87,18 @@ npm run lint         # eslint . (flat config in eslint.config.mjs; one file: npx
   - `generateText(contents, { systemInstruction, temperature, json })` handles single prompts and multi-turn `Content[]`.
   - `generateJson(prompt)` uses JSON response mode, then `extractJsonPayload` (a fenced block, else the outermost `{...}`). It throws `ModelOutputError` on non-JSON.
 - **Every JSON route validates with zod before using the output:** `generate-roadmap`, `generate-quiz`, `generate-in-depth`, `nsqf/ai-roadmap`. Keep response shapes stable: client components read `response`, `text`, `content`, `quiz` and `roadmap` directly.
-- `career-guidance` is multi-turn, with a system instruction. Its `rag` flag only changes the system prompt. **No retrieval happens anywhere.**
+- **Resilience** (`generateText`):
+  - Retries 429/5xx, then falls back through `GEMINI_FALLBACK_MODELS` (default `gemini-3.5-flash-lite, gemini-3.7-flash, gemini-3.8-flash, gemini-3.5-flash`).
+  - A 404 (model not offered to this key; `gemini-2.5-flash` is closed to new users) or a used-up *daily* quota skips straight to the next model.
+  - If every model fails, it throws `AIUnavailableError`, and every AI route maps that to **503 + `AI_BUSY_MESSAGE`**.
+  - Client components show the server's `error` text (with "Try again" where it makes sense); never fail silently.
+- **Free-tier keys** have small per-minute and per-day limits *per model*. Heavy testing exhausts them quickly. Use the stub (`GEMINI_BASE_URL`) for automated runs.
+- **Learner-grounded AI:**
+  - `lib/learner.ts`: `loadLearner()` returns one snapshot (profile, roadmaps with per-topic completion, hours, streak, last-7-days activity, goals). `describeLearner()` turns it into prompt context.
+  - These use it: `/api/mentor` (AI Mentor chat), `/api/career-guidance` (when `rag` is true, it adds the snapshot plus NSQF reference data), and the AI Mentor and Career Guidance pages.
+- **Other AI routes:** `/api/resume-match` (score, strengths, gaps, courses) and `/api/career-compare` (two paths: roles, LPA ranges, demand, months to job-ready). Both are zod-validated.
+- **Badges:** `lib/achievements.ts` computes them from the snapshot. There's no badge table.
+- **Personal NSQF path:** `lib/nsqf-path.ts` (`buildRoadmap`) is shared by `/api/nsqf/roadmap` and the Career Guidance tracker, which builds it from the user's onboarding answers.
 
 ### NSQF logic
 - **Supported level range:** the app assigns levels **3–6** only, defined once as `NSQF_MIN_LEVEL`, `NSQF_MAX_LEVEL` and `clampNsqfLevel()` in `lib/nsqf.ts`. Every route below uses them. Widening the range also requires adding rows to `data/*.json`.
@@ -110,9 +121,7 @@ npm run lint         # eslint . (flat config in eslint.config.mjs; one file: npx
 - **Onboarding and profile autosave:** triggered from edit handlers (`update`), never from an effect on the form state. An effect would also fire on mount and could overwrite saved answers with the empty form.
 
 ### Static or mock areas
-- `/ai-mentor` is a hardcoded UI with static sample data and canned replies. It makes no API calls.
-  - It is prerendered, so its initial render must be deterministic: no times, random values or locale formatting.
-- `components/career-path-simulator.tsx` uses hardcoded India salary and outcome tables.
+- Jobs show built-in sample listings until `ADZUNA_APP_ID` / `ADZUNA_APP_KEY` are set.
 - `@vercel/analytics` requests `/_vercel/insights/script.js`, which 404s anywhere except on Vercel. That's expected.
 
 ## Local end-to-end testing
@@ -120,10 +129,66 @@ npm run lint         # eslint . (flat config in eslint.config.mjs; one file: npx
 - Apply `scripts/schema.sql` with `psql` against port 54322. Local auth has email confirmation off, so sign-up logs in immediately.
 - Run the app with the local `NEXT_PUBLIC_SUPABASE_*` values. For AI features without a real key, point `GEMINI_BASE_URL` at a small HTTP stub that answers `POST /v1beta/models/{model}:generateContent` with `{ candidates: [{ content: { parts: [{ text }] } }] }`.
 
+## UI and design system ("notebook brutalist")
+- **Look:**
+  - Notebook paper with ink outlines, hard offset shadows and flat bright fills.
+  - Decorated with stickers, washi tape, stamps, highlighter strokes and handwritten notes.
+  - Keep new UI in this language. Don't reintroduce soft blurred shadows, gradients or gradient text.
+- **Palette** (`app/globals.css`):
+  - `ink` (#15171e) for text, borders and shadows; `paper` background; deep-teal `primary` for links.
+  - Pops `brand` (teal), `marigold`, `coral`, `lagoon`, `leaf` and `bubblegum` are bright fills meant for **ink text**. Never use white text on them; only `bg-ink` takes white text.
+  - Each pop has a `-soft` tint and an `-ink` shade for colored text on light backgrounds.
+  - Don't use raw Tailwind palette colors (`purple-600`, `gray-500`, ...).
+  - The app is light-only, so don't add `dark:` variants.
+- **Surfaces:**
+  - Containers use `border-2 border-ink` with a hard shadow: `shadow-soft` (3px), `shadow-brut` (4px) or `shadow-lift` (6px). These are all solid ink offsets.
+  - `.brut` / `.brut-interactive` give the border, shadow and press-on-click behavior.
+  - A hard shadow without an ink border looks broken, so always pair them.
+  - `--border` is a soft warm line for internal dividers only; `--input` and `--ring` are ink.
+- **Primitives** (`components/ui/`):
+  - Button variants: `default` (marigold), `outline` (white), `secondary` (teal), `pop` (ink with a marigold shadow), `destructive`, `ghost`, `link`. Filled buttons press into their shadow on click.
+  - Cards, inputs, tabs, badges, dialogs and selects all carry ink borders.
+- **Fonts** (`app/layout.tsx`):
+  - Archivo (wide, via the `wdth` axis; `font-display`, applied to h1–h4). Posters use `uppercase` with `[font-stretch:120%]`.
+  - Figtree for body text (`font-sans`).
+  - Kalam for handwriting (`.hand`). It includes Devanagari, e.g. "ज्ञान"; the display font doesn't.
+- **Notebook pieces:**
+  - `components/doodles.tsx`:
+    - `Sticker`, which can be dragged; double-click resets it.
+    - `Tape` and `Stamp`.
+    - `ScribbleUnderline`, `ScribbleCircle` and `ScribbleArrow`, which draw themselves in via `.draw` + `pathLength=1`.
+    - `DoodleStar` and `HandNote`.
+  - Utilities: `.marker` (highlighter) and `.ruled` (ruled lines).
+  - Absolutely positioned SVGs need explicit width and height: replaced elements don't stretch to their insets.
+- **Shared blocks:**
+  - `PageHeader` (sticker eyebrow, title, optional handwritten `note`, taped "scrapbook" art card).
+  - `SpotlightCard` (ink card with hover lift and glow; optional `tape` and `tilt`).
+  - `SectionTitle`, `AuthShell`, `Marquee`, `Logo` and `SiteFooter`.
+- **Home page:**
+  - Poster hero with draggable stickers on a ruled, hole-punched page.
+  - Skills ticker.
+  - Sticky-note feature board.
+  - Interactive NSQF staircase (`NsqfExplorer`).
+  - "How it works" as a tickable to-do list.
+  - Marigold call to action.
+- **Illustrations:**
+  - `components/illustrations.tsx` wraps every shape in an ink outline by default.
+  - Shadows, text and translucent shapes opt out with `stroke="none"`.
+  - Use theme colors only.
+- **Motion:**
+  - `InteractiveBackground`: ruled paper that turns into teal graph paper under the pointer.
+  - `Parallax` (`parallax-1/2/3` layers).
+  - `float*`, `march`, `draw`, `wiggle`, `marquee` and `spin-slow` animations.
+  - All disabled under `prefers-reduced-motion`. Never compute random values or times during render (hydration mismatch; see `react-hooks/purity`).
+- **Layout:**
+  - The header collapses into a `Sheet` below `lg`; pages must not add their own sticky headers.
+  - The content wrapper uses `overflow-x-clip`, so tilted and offset decorations can't cause sideways scroll.
+  - Every page must fit 390px wide.
+  - `roadmap-visualization` stacks its panels below `lg`.
+
 ## Conventions
 - **Import alias:** `@/*` maps to the repo root.
-- **UI primitives:** shadcn/ui ("new-york" style, lucide icons) in `components/ui/`.
+- **UI primitives:** shadcn/ui ("new-york" style, lucide icons) in `components/ui/`. They were restyled for the notebook-brutalist look (see above).
 - **Styling:** Tailwind CSS v4 via `@tailwindcss/postcss`; there is no `tailwind.config`.
   - `app/globals.css` is the live stylesheet. `styles/globals.css` is an unused leftover.
-- **Fonts:** `app/layout.tsx` binds the Baloo 2 font to the `--font-geist-sans` CSS variable. The variable name is misleading.
 - **Async request APIs:** route `params`, `cookies()` and `headers()` are async (`const { id } = await params`).

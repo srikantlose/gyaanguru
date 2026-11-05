@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { createClient } from "@/lib/supabase/server"
-import { generateJson } from "@/lib/gemini"
+import { AI_BUSY_MESSAGE, AIUnavailableError, generateJson } from "@/lib/gemini"
 
 const QuizSchema = z.object({
   questions: z
@@ -69,6 +69,9 @@ Requirements:
 
     return NextResponse.json({ quiz: { questions } })
   } catch (error) {
+    if (error instanceof AIUnavailableError) {
+      return NextResponse.json({ error: AI_BUSY_MESSAGE }, { status: 503 })
+    }
     console.error("Error generating quiz:", error)
     return NextResponse.json({ error: "Failed to generate quiz" }, { status: 500 })
   }

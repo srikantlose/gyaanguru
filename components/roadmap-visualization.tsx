@@ -69,10 +69,13 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
   const [isLoadingQuiz, setIsLoadingQuiz] = useState(false)
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({})
   const [quizSubmitted, setQuizSubmitted] = useState(false)
+  const [quizError, setQuizError] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    // Scroll only the message list; scrollIntoView would also scroll the page on load.
+    const box = messagesEndRef.current?.closest(".overflow-y-auto")
+    if (box) box.scrollTo({ top: box.scrollHeight, behavior: "smooth" })
   }
 
   useEffect(() => {
@@ -186,6 +189,7 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
     data: inDepthData,
     error: inDepthError,
     isLoading: isLoadingInDepth,
+    mutate: retryInDepth,
   } = useSWR(
     selectedTopic ? ["in-depth", roadmapId, selectedTopic.moduleIndex, selectedTopic.topicIndex] : null,
     async ([, _rid, mIdx, tIdx]) => {
@@ -229,7 +233,10 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
         }),
       })
 
-      if (!response.ok) throw new Error("Failed to get AI response")
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}))
+        throw new Error(err?.error || "Failed to get AI response")
+      }
 
       const data = await response.json()
       setMessages((prev) => [...prev, { role: "assistant", content: data.response }])
@@ -237,7 +244,13 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
       console.error("Error sending message:", error)
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: "Sorry, I encountered an error. Please try again." },
+        {
+          role: "assistant",
+          content:
+            error instanceof Error && error.message !== "Failed to get AI response"
+              ? error.message
+              : "Sorry, I encountered an error. Please try again.",
+        },
       ])
     } finally {
       setIsLoadingAI(false)
@@ -259,7 +272,10 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
         }),
       })
 
-      if (!response.ok) throw new Error("Failed to get AI response")
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}))
+        throw new Error(err?.error || "Failed to get AI response")
+      }
 
       const data = await response.json()
       setMessages((prev) => [...prev, { role: "assistant", content: data.response }])
@@ -267,7 +283,13 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
       console.error("Error sending message:", error)
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: "Sorry, I encountered an error. Please try again." },
+        {
+          role: "assistant",
+          content:
+            error instanceof Error && error.message !== "Failed to get AI response"
+              ? error.message
+              : "Sorry, I encountered an error. Please try again.",
+        },
       ])
     } finally {
       setIsLoadingAI(false)
@@ -279,6 +301,7 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
 
     setIsLoadingQuiz(true)
     setShowQuiz(true)
+    setQuizError(null)
 
     try {
       const response = await fetch("/api/generate-quiz", {
@@ -290,7 +313,10 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
         }),
       })
 
-      if (!response.ok) throw new Error("Failed to generate quiz")
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}))
+        throw new Error(err?.error || "Failed to generate quiz")
+      }
 
       const data = await response.json()
       setQuizData(data.quiz)
@@ -298,7 +324,7 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
       setQuizSubmitted(false)
     } catch (error) {
       console.error("Error generating quiz:", error)
-      setShowQuiz(false)
+      setQuizError(error instanceof Error ? error.message : "Failed to generate quiz")
     } finally {
       setIsLoadingQuiz(false)
     }
@@ -343,14 +369,14 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
   }
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] gap-0 overflow-hidden rounded-lg border bg-background">
-      <div className="flex w-80 flex-col border-r bg-muted/30">
+    <div className="flex flex-col gap-0 overflow-hidden rounded-2xl border-2 border-ink bg-card shadow-brut lg:h-[calc(100vh-8rem)] lg:flex-row">
+      <div className="flex max-h-80 w-full flex-col border-b bg-muted/30 lg:max-h-none lg:w-80 lg:border-b-0 lg:border-r">
         <div className="border-b bg-background p-4">
           <Button
             variant="ghost"
             size="sm"
             onClick={handleBack}
-            className="mb-3 -ml-2 hover:bg-purple-50 dark:hover:bg-purple-950"
+            className="mb-3 -ml-2 hover:bg-brand-soft"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Outline
@@ -364,7 +390,7 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
         <div className="flex items-center gap-2 border-b bg-background px-4 py-3">
           <Badge
             variant="secondary"
-            className="rounded-full px-3 py-1 text-xs font-semibold bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300"
+            className="rounded-full px-3 py-1 text-xs font-semibold bg-brand-soft text-brand-ink"
           >
             {progress}% Completed
           </Badge>
@@ -372,7 +398,7 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
             variant="outline"
             size="sm"
             onClick={() => setShowVisualRoadmap(true)}
-            className="ml-auto hover:bg-purple-50 dark:hover:bg-purple-950"
+            className="ml-auto hover:bg-brand-soft"
           >
             <Network className="mr-2 h-4 w-4" />
             Visual Map
@@ -389,7 +415,7 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
               <div key={module.id} className="border-b">
                 <button
                   onClick={() => toggleModule(module.id)}
-                  className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-purple-50/50 dark:hover:bg-purple-950/50"
+                  className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-brand-soft/50"
                 >
                   <div
                     className={cn(
@@ -423,8 +449,8 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
                           key={topic.id}
                           onClick={() => setSelectedTopic({ moduleIndex, topicIndex })}
                           className={cn(
-                            "flex w-full items-start gap-3 px-4 py-3 pl-14 text-left transition-colors hover:bg-purple-50/50 dark:hover:bg-purple-950/50",
-                            isSelected && "bg-purple-50 dark:bg-purple-950/50",
+                            "flex w-full items-start gap-3 px-4 py-3 pl-14 text-left transition-colors hover:bg-brand-soft/50",
+                            isSelected && "bg-brand-soft",
                           )}
                         >
                           <div className="flex h-5 w-5 shrink-0 items-center justify-center">
@@ -446,20 +472,20 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
         </div>
       </div>
 
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex min-h-[70vh] flex-1 flex-col overflow-hidden lg:min-h-0">
         {selectedTopic && currentTopic ? (
           <>
             <div className="flex items-center justify-between border-b bg-background px-6 py-4">
               <h1 className="font-serif text-2xl font-bold">{currentTopic.title}</h1>
               <div className="flex items-center gap-2">
-                <Badge variant="outline" className="text-sm border-purple-500/50 text-purple-700 dark:text-purple-300">
+                <Badge variant="outline" className="text-sm border-brand/50 text-brand-ink">
                   {currentTopic.estimatedHours}h estimated
                 </Badge>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setShowAIChat(!showAIChat)}
-                  className="hover:bg-purple-50 dark:hover:bg-purple-950"
+                  className="hover:bg-brand-soft"
                   aria-label="Ask the AI Instructor"
                   title="Ask the AI Instructor"
                 >
@@ -553,9 +579,12 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
                     return (
                       <div className="prose prose-sm max-w-none">
                         {inDepthError && (
-                          <p className="mb-3 text-sm text-muted-foreground">
-                            Couldn&apos;t load AI notes. Showing available notes instead.
-                          </p>
+                          <div className="mb-3 flex flex-wrap items-center gap-3 rounded-xl border-2 border-ink bg-marigold-soft px-3 py-2 text-sm text-ink">
+                            <span>{inDepthError.message || "Couldn't load AI notes."} Showing the lesson summary for now.</span>
+                            <button type="button" onClick={() => retryInDepth()} className="font-bold underline underline-offset-4">
+                              Try again
+                            </button>
+                          </div>
                         )}
                         {contentBlocks.length > 0 ? (
                           <div className="space-y-3">
@@ -603,10 +632,10 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
               </Card>
             </div>
 
-            <div className="flex items-center justify-between border-t bg-background px-6 py-4">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-t bg-background px-4 py-4 sm:px-6">
               <Button
                 variant="outline"
-                className="hover:bg-purple-50 dark:hover:bg-purple-950 bg-transparent"
+                className="hover:bg-brand-soft bg-transparent"
                 onClick={() => {
                   if (selectedTopic.topicIndex > 0) {
                     setSelectedTopic({ ...selectedTopic, topicIndex: selectedTopic.topicIndex - 1 })
@@ -642,8 +671,8 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
           </>
         ) : (
           <div className="flex flex-1 flex-col items-center justify-center p-6 text-center">
-            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-purple-100 dark:bg-purple-950">
-              <CheckCircle2 className="h-8 w-8 text-purple-600 dark:text-purple-400" />
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-brand-soft">
+              <CheckCircle2 className="h-8 w-8 text-brand" />
             </div>
             <h2 className="mb-2 font-serif text-2xl font-bold">{roadmap.title}</h2>
             <p className="mb-6 max-w-md text-muted-foreground">{roadmap.description}</p>
@@ -684,7 +713,7 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
       </div>
 
       {showAIChat && (
-        <div className="flex w-80 flex-col border-l bg-background">
+        <div className="flex h-[28rem] w-full flex-col border-t bg-background lg:h-auto lg:w-80 lg:border-l lg:border-t-0">
           <div className="flex items-center justify-between border-b px-4 py-3">
             <div className="flex items-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary">
@@ -696,7 +725,7 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
               variant="ghost"
               size="sm"
               onClick={() => setShowAIChat(false)}
-              className="hover:bg-purple-50 dark:hover:bg-purple-950"
+              className="hover:bg-brand-soft"
             >
               <X className="h-4 w-4" />
             </Button>
@@ -705,7 +734,7 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
           <div className="flex-1 overflow-y-auto p-4">
             {messages.length === 0 ? (
               <>
-                <div className="mb-4 rounded-lg bg-purple-100 dark:bg-purple-950 p-3">
+                <div className="mb-4 rounded-lg bg-brand-soft p-3">
                   <p className="text-sm">Hello, how can I help you today?</p>
                 </div>
 
@@ -718,7 +747,7 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-auto w-full justify-start whitespace-normal bg-transparent p-3 text-left text-sm hover:bg-purple-50 dark:hover:bg-purple-950"
+                        className="h-auto w-full justify-start whitespace-normal bg-transparent p-3 text-left text-sm hover:bg-brand-soft"
                         onClick={() => handleSuggestedQuestion(`What are the key concepts in ${currentTopic.title}?`)}
                       >
                         What are the key concepts in {currentTopic.title}?
@@ -726,7 +755,7 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-auto w-full justify-start whitespace-normal bg-transparent p-3 text-left text-sm hover:bg-purple-50 dark:hover:bg-purple-950"
+                        className="h-auto w-full justify-start whitespace-normal bg-transparent p-3 text-left text-sm hover:bg-brand-soft"
                         onClick={() => handleSuggestedQuestion("Can you provide practical examples?")}
                       >
                         Can you provide practical examples?
@@ -734,7 +763,7 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-auto w-full justify-start whitespace-normal bg-transparent p-3 text-left text-sm hover:bg-purple-50 dark:hover:bg-purple-950"
+                        className="h-auto w-full justify-start whitespace-normal bg-transparent p-3 text-left text-sm hover:bg-brand-soft"
                         onClick={() => handleSuggestedQuestion("What are common mistakes to avoid?")}
                       >
                         What are common mistakes to avoid?
@@ -750,18 +779,18 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
                     key={index}
                     className={cn(
                       "rounded-lg p-3",
-                      message.role === "assistant" ? "bg-purple-100 dark:bg-purple-950" : "bg-muted ml-4",
+                      message.role === "assistant" ? "bg-brand-soft" : "bg-muted ml-4",
                     )}
                   >
                     <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
                   </div>
                 ))}
                 {isLoadingAI && (
-                  <div className="rounded-lg bg-purple-100 dark:bg-purple-950 p-3">
+                  <div className="rounded-lg bg-brand-soft p-3">
                     <div className="flex items-center gap-2">
-                      <div className="h-2 w-2 animate-bounce rounded-full bg-purple-600"></div>
-                      <div className="h-2 w-2 animate-bounce rounded-full bg-purple-600 [animation-delay:0.2s]"></div>
-                      <div className="h-2 w-2 animate-bounce rounded-full bg-purple-600 [animation-delay:0.4s]"></div>
+                      <div className="h-2 w-2 animate-bounce rounded-full bg-brand"></div>
+                      <div className="h-2 w-2 animate-bounce rounded-full bg-brand [animation-delay:0.2s]"></div>
+                      <div className="h-2 w-2 animate-bounce rounded-full bg-brand [animation-delay:0.4s]"></div>
                     </div>
                   </div>
                 )}
@@ -775,7 +804,7 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
               <input
                 type="text"
                 placeholder="Ask AI anything about the lesson..."
-                className="flex-1 rounded-md border bg-background px-3 py-2 text-sm focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
+                className="flex-1 rounded-md border bg-background px-3 py-2 text-sm focus:border-brand focus:ring-1 focus:ring-brand"
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyDown={(e) => {
@@ -812,6 +841,11 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
                     <p className="text-sm text-muted-foreground">Generating quiz questions...</p>
                   </div>
                 </div>
+              ) : quizError ? (
+                <div className="flex h-64 flex-col items-center justify-center gap-4 text-center">
+                  <p className="max-w-sm font-semibold text-ink">{quizError}</p>
+                  <Button onClick={handleGenerateQuiz}>Try again</Button>
+                </div>
               ) : quizData ? (
                 <div className="space-y-6">
                   {quizData.questions.map((question: any, qIndex: number) => (
@@ -834,8 +868,8 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
                                 "flex w-full items-center gap-3 rounded-lg border p-4 text-left transition-colors",
                                 !showResult && "hover:bg-muted/50",
                                 isSelected && !showResult && "border-primary bg-primary/5",
-                                showResult && isCorrect && "border-green-500 bg-green-50 dark:bg-green-950",
-                                showResult && isSelected && !isCorrect && "border-red-500 bg-red-50 dark:bg-red-950",
+                                showResult && isCorrect && "border-leaf bg-leaf-soft",
+                                showResult && isSelected && !isCorrect && "border-coral bg-coral-soft",
                                 quizSubmitted && "cursor-default",
                               )}
                             >
@@ -843,8 +877,8 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
                                 className={cn(
                                   "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2",
                                   isSelected && !showResult && "border-primary bg-primary",
-                                  showResult && isCorrect && "border-green-500 bg-green-500",
-                                  showResult && isSelected && !isCorrect && "border-red-500 bg-red-500",
+                                  showResult && isCorrect && "border-leaf bg-leaf",
+                                  showResult && isSelected && !isCorrect && "border-coral bg-coral",
                                 )}
                               >
                                 {isSelected && <div className="h-2 w-2 rounded-full bg-white"></div>}

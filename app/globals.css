@@ -3,81 +3,55 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * GyaanGuru "notebook brutalist" theme.
+ * Notebook paper + ink outlines + hard offset shadows + flat bright fills.
+ * Pops (brand/marigold/coral/lagoon/leaf/bubblegum) are bright fills meant for INK text;
+ * each has a -soft tint for large areas and an -ink shade for colored text on light backgrounds.
+ */
 :root {
-  /* Updated to use vibrant purple color scheme throughout */
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
-
-.dark {
-  /* Dark mode with strong purple accents */
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.145 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.145 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.439 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
+  --background: #fff8e8;
+  --foreground: #15171e;
+  --card: #ffffff;
+  --card-foreground: #15171e;
+  --popover: #ffffff;
+  --popover-foreground: #15171e;
+  --primary: #0b6e66;
+  --primary-foreground: #ffffff;
+  --secondary: #ffeaa0;
+  --secondary-foreground: #15171e;
+  --muted: #f6efdd;
+  --muted-foreground: #4f5566;
+  --accent: #d6f5f1;
+  --accent-foreground: #0b4f49;
+  --destructive: #d63a2a;
+  --destructive-foreground: #ffffff;
+  --border: #e4d9c0;
+  --input: #15171e;
+  --ring: #15171e;
+  --chart-1: #2ec4b6;
+  --chart-2: #ffc83d;
+  --chart-3: #ff7a66;
+  --chart-4: #6cb8ff;
+  --chart-5: #9be36d;
+  --radius: 0.75rem;
+  --sidebar: #fffdf6;
+  --sidebar-foreground: #15171e;
+  --sidebar-primary: #0b6e66;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #d6f5f1;
+  --sidebar-accent-foreground: #0b4f49;
+  --sidebar-border: #e4d9c0;
+  --sidebar-ring: #15171e;
 }
 
 @theme inline {
-  /* optional: --font-sans, --font-serif, --font-mono if they are applied in the layout.tsx */
+  --font-sans: var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-archivo), var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  --font-hand: var(--font-kalam), "Comic Sans MS", cursive;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -102,10 +76,12 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-sm: calc(var(--radius) - 6px);
+  --radius-md: calc(var(--radius) - 4px);
+  --radius-lg: calc(var(--radius) - 2px);
+  --radius-xl: var(--radius);
+  --radius-2xl: calc(var(--radius) + 4px);
+  --radius-3xl: calc(var(--radius) + 10px);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -114,53 +90,222 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  --color-ink: #15171e;
+  --color-paper: #fff8e8;
+  --color-rule: #c8dbf0;
+  --color-margin: #f19a90;
+  --color-brand: #2ec4b6;
+  --color-brand-soft: #d6f5f1;
+  --color-brand-ink: #0b6e66;
+  --color-marigold: #ffc83d;
+  --color-marigold-soft: #fff0c2;
+  --color-marigold-ink: #7a4f00;
+  --color-coral: #ff7a66;
+  --color-coral-soft: #ffe1db;
+  --color-coral-ink: #b23a27;
+  --color-lagoon: #6cb8ff;
+  --color-lagoon-soft: #ddeeff;
+  --color-lagoon-ink: #1f5fa8;
+  --color-leaf: #9be36d;
+  --color-leaf-soft: #e7f8da;
+  --color-leaf-ink: #2f6b12;
+  --color-bubblegum: #ffa8d5;
+  --color-bubblegum-soft: #ffe3f1;
+  --color-bubblegum-ink: #9c2463;
+
+  /* Hard offset "ink" shadows. shadow-soft / shadow-lift kept as names so existing classes convert. */
+  --shadow-soft: 3px 3px 0 0 #15171e;
+  --shadow-brut: 4px 4px 0 0 #15171e;
+  --shadow-lift: 6px 6px 0 0 #15171e;
+  --shadow-none-brut: 0 0 0 0 #15171e;
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    scroll-behavior: smooth;
+  }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+  h1,
+  h2 {
+    font-stretch: 112%;
+  }
+  h3,
+  h4 {
+    font-stretch: 104%;
+  }
+  ::selection {
+    background: var(--color-marigold);
+    color: var(--color-ink);
   }
 }
 
 @layer components {
-  /* add reusable outlined card utility (matches reference theme) */
-  .outline-card {
-    @apply bg-card border rounded-2xl;
-  }
-
-  /* subtle eyebrow/pill tag with outline */
+  /* Sticker-style label above titles. */
   .eyebrow {
-    @apply inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm;
+    @apply inline-flex items-center gap-2 rounded-full border-2 border-ink px-3 py-0.5 text-xs font-extrabold tracking-wider uppercase;
+    box-shadow: 2px 2px 0 0 var(--color-ink);
   }
 
-  /* rounded hero/card container with soft shadow */
-  .hero-card {
-    @apply relative rounded-3xl border bg-card p-8 shadow-sm sm:p-12;
+  /* Highlighter stroke behind a word. */
+  .marker {
+    background: linear-gradient(100deg, transparent 0.5%, var(--color-marigold) 2%, #ffd96e 50%, var(--color-marigold) 96%, transparent 98%);
+    border-radius: 0.5em 0.25em 0.6em 0.3em;
+    padding: 0 0.12em;
+    margin: 0 -0.04em;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
   }
 
-  .soft-shadow {
-    @apply shadow-[0_10px_30px_-10px_rgba(0,0,0,0.25)];
+  /* Handwriting (Kalam, includes Devanagari). */
+  .hand {
+    font-family: var(--font-hand);
+    font-weight: 700;
+    letter-spacing: 0;
   }
 
-  /* playful accent dot, matches brand primary */
-  .decor-dot {
-    position: absolute;
-    width: 14px;
-    height: 14px;
-    border-radius: 9999px;
-    background: var(--color-primary);
-    opacity: 0.15;
-    pointer-events: none;
+  /* Ruled notebook lines. */
+  .ruled {
+    background-image: repeating-linear-gradient(to bottom, transparent 0 31px, var(--color-rule) 31px 32px);
+  }
+
+  /* Brutalist surface: ink outline + hard shadow, with hover lift and click press. */
+  .brut {
+    border: 2px solid var(--color-ink);
+    box-shadow: 4px 4px 0 0 var(--color-ink);
+  }
+  .brut-interactive {
+    transition:
+      transform 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+  .brut-interactive:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 0 var(--color-ink);
+  }
+  .brut-interactive:active {
+    transform: translate(3px, 3px);
+    box-shadow: 1px 1px 0 0 var(--color-ink);
   }
 }
 
-/* Optional: very light separators for sections */
-@layer utilities {
-  /* light top divider to separate header/sections when needed */
-  .section-divider {
-    @apply border-t;
+/* Motion. Everything here is opt-in and disabled for reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .parallax-1,
+  .parallax-2,
+  .parallax-3 {
+    transition: transform 0.35s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .parallax-1 {
+    transform: translate(calc(var(--px, 0) * 6px), calc(var(--py, 0) * 4px));
+  }
+  .parallax-2 {
+    transform: translate(calc(var(--px, 0) * 12px), calc(var(--py, 0) * 8px));
+  }
+  .parallax-3 {
+    transform: translate(calc(var(--px, 0) * 20px), calc(var(--py, 0) * 14px));
+  }
+  .float {
+    animation: gg-float 5s ease-in-out infinite;
+  }
+  .float-slow {
+    animation: gg-float 7s ease-in-out infinite;
+  }
+  .float-delayed {
+    animation: gg-float 6s ease-in-out 1.2s infinite;
+  }
+  .march {
+    animation: gg-march 10s linear infinite;
+  }
+  .rise-in {
+    animation: gg-rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  }
+  .wiggle:hover {
+    animation: gg-wiggle 0.5s ease-in-out;
+  }
+  .draw {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: gg-draw 0.9s ease-out 0.3s forwards;
+  }
+  .marquee-track {
+    animation: gg-marquee 38s linear infinite;
+  }
+  .marquee:hover .marquee-track {
+    animation-play-state: paused;
+  }
+  .spin-slow {
+    animation: gg-spin 24s linear infinite;
+  }
+}
+
+@keyframes gg-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+@keyframes gg-march {
+  to {
+    stroke-dashoffset: -180;
+  }
+}
+@keyframes gg-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+@keyframes gg-wiggle {
+  0%,
+  100% {
+    rotate: 0deg;
+  }
+  25% {
+    rotate: -4deg;
+  }
+  75% {
+    rotate: 4deg;
+  }
+}
+@keyframes gg-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes gg-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+@keyframes gg-spin {
+  to {
+    rotate: 360deg;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .draw {
+    stroke-dasharray: none;
   }
 }

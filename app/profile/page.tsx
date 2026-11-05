@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { PageHeader } from "@/components/page-header"
+import { StudyIllustration } from "@/components/illustrations"
 import ProfileForm from "@/components/profile-form"
 
 export default async function ProfilePage() {
@@ -16,19 +17,16 @@ export default async function ProfilePage() {
   const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single()
 
   return (
-    <main className="min-h-screen py-12">
-      <div className="container mx-auto px-4">
-        <div className="mx-auto max-w-3xl">
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="text-balance">Profile</CardTitle>
-              <CardDescription>Review and edit your onboarding details anytime.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ProfileForm initialData={(profile?.onboarding_data as any) || undefined} />
-            </CardContent>
-          </Card>
-        </div>
+    <main className="container mx-auto px-4 py-10 sm:py-12">
+      <div className="mx-auto max-w-3xl">
+        <PageHeader
+          eyebrow="Profile"
+          tone="brand"
+          title={profile?.full_name ? `${profile.full_name}'s profile` : "Your profile"}
+          description="Review and edit your onboarding details anytime. Changes save automatically."
+          art={<StudyIllustration />}
+        />
+        <ProfileForm initialData={(profile?.onboarding_data as any) || undefined} />
       </div>
     </main>
   )

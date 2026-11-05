@@ -1,55 +1,61 @@
-"use client"
+import { Award, Check, Lock } from "lucide-react"
+import type { Achievement } from "@/lib/achievements"
+import { cn } from "@/lib/utils"
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
+const fill: Record<Achievement["tone"], string> = {
+  brand: "bg-brand",
+  marigold: "bg-marigold",
+  coral: "bg-coral",
+  lagoon: "bg-lagoon",
+  leaf: "bg-leaf",
+  bubblegum: "bg-bubblegum",
+}
 
-type BadgeDef = { id: string; label: string; earned: boolean }
-
-export function MicroCredentialBadges() {
-  const [wallet, setWallet] = useState<string>("")
-  const [badges, setBadges] = useState<BadgeDef[]>([
-    { id: "skill-data-cleaning", label: "Data Cleaning", earned: true },
-    { id: "skill-sql-queries", label: "SQL Queries", earned: false },
-    { id: "skill-ml-basics", label: "ML Basics", earned: false },
-  ])
-
-  const issueBadge = (id: string) => {
-    setBadges((prev) => prev.map((b) => (b.id === id ? { ...b, earned: true } : b)))
-  }
-
+/** Badges earned from the learner's real activity, with progress toward the locked ones. */
+export function MicroCredentialBadges({ achievements }: { achievements: Achievement[] }) {
+  const earned = achievements.filter((a) => a.earned).length
   return (
-    <div className="space-y-3">
-      <div className="grid gap-2">
-        <Input
-          placeholder="Blockchain wallet address (demo)"
-          value={wallet}
-          onChange={(e) => setWallet(e.target.value)}
-        />
-        <div className="text-xs text-muted-foreground">
-          When you complete a skill cluster, a verifiable credential can be issued to your wallet.
-        </div>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        {badges.map((b) => (
-          <Badge key={b.id} variant={b.earned ? "default" : "outline"}>
-            {b.label} {b.earned ? "• Earned" : ""}
-          </Badge>
+    <div className="space-y-4">
+      <p className="font-display text-lg font-extrabold text-ink">
+        {earned} of {achievements.length} badges earned
+      </p>
+      <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {achievements.map((a, i) => (
+          <li
+            key={a.id}
+            className={cn(
+              "relative flex flex-col items-center rounded-2xl border-2 border-ink p-4 text-center transition-transform",
+              a.earned ? "bg-card shadow-brut hover:-rotate-2" : "bg-muted/60",
+            )}
+            style={{ rotate: a.earned ? `${i % 2 ? 1.5 : -1.5}deg` : undefined }}
+          >
+            <span
+              className={cn(
+                "relative flex h-16 w-16 items-center justify-center rounded-full border-2 border-ink",
+                a.earned ? cn(fill[a.tone], "shadow-soft") : "border-dashed bg-card",
+              )}
+            >
+              {a.earned ? <Award className="h-8 w-8 text-ink" /> : <Lock className="h-6 w-6 text-ink/40" />}
+              {a.earned && (
+                <span className="absolute -right-1 -top-1 flex h-6 w-6 items-center justify-center rounded-full border-2 border-ink bg-leaf">
+                  <Check className="h-3.5 w-3.5 text-ink" strokeWidth={3} />
+                </span>
+              )}
+            </span>
+            <p className={cn("mt-3 font-display font-extrabold", a.earned ? "text-ink" : "text-ink/60")}>{a.title}</p>
+            <p className="text-xs text-ink/70">{a.description}</p>
+            {!a.earned && (
+              <div className="mt-3 w-full">
+                <div className="h-2.5 overflow-hidden rounded-full border-2 border-ink bg-card">
+                  <div className={cn("h-full", fill[a.tone])} style={{ width: `${a.progress}%` }} />
+                </div>
+                <p className="mt-1 text-[11px] font-semibold text-ink/60">{a.hint}</p>
+              </div>
+            )}
+          </li>
         ))}
-      </div>
-      <div className="flex gap-2">
-        {badges
-          .filter((b) => !b.earned)
-          .map((b) => (
-            <Button key={b.id} size="sm" onClick={() => issueBadge(b.id)}>
-              Issue “{b.label}”
-            </Button>
-          ))}
-      </div>
-      <div className="text-xs text-muted-foreground">
-        Note: This is a local demo. Wallet linking and on-chain issuance can be added later.
-      </div>
+      </ul>
+      <p className="text-xs text-muted-foreground">Badges update automatically as you complete lessons and roadmaps.</p>
     </div>
   )
 }

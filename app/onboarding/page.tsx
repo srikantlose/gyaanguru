@@ -2,7 +2,10 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card"
+import { SectionTitle } from "@/components/section-title"
+import { PageHeader } from "@/components/page-header"
+import { StudyIllustration } from "@/components/illustrations"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -136,27 +139,34 @@ export default function OnboardingPage() {
   }
 
   return (
-    <main className="min-h-screen p-6">
+    <main className="container mx-auto px-4 py-10 sm:py-12">
       <div className="mx-auto w-full max-w-3xl">
         {needsMigration && (
           <Alert className="mb-4">
             <AlertTitle>Database migration required</AlertTitle>
             <AlertDescription>
-              Missing columns on profiles. Please run the SQL script at scripts/005_fix_onboarding_schema.sql to
+              Missing columns on profiles. Please run the SQL script at scripts/schema.sql to
               proceed.
             </AlertDescription>
           </Alert>
         )}
-        <div className="mb-4 flex items-center justify-between">
-          <h1 className="font-serif text-3xl font-bold">Onboarding</h1>
-          <span className="text-sm text-muted-foreground">
-            {saving === "saving" ? "Saving..." : saving === "saved" ? "Saved" : ""}
-          </span>
-        </div>
+        <PageHeader
+          eyebrow="Getting started"
+          tone="lagoon"
+          title="Tell us about you"
+          description="Five short sections. Everything saves as you type, and you can change it later from your profile."
+          actions={
+            <span className="inline-flex items-center gap-2 rounded-full border-2 border-ink bg-card px-3 py-1 text-sm font-bold text-ink shadow-soft">
+              <span className={saving === "saving" ? "h-2 w-2 animate-pulse rounded-full bg-marigold" : "h-2 w-2 rounded-full bg-leaf"} />
+              {saving === "saving" ? "Saving..." : saving === "saved" ? "Saved" : "Autosave on"}
+            </span>
+          }
+          art={<StudyIllustration />}
+        />
 
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-balance">Academic Background</CardTitle>
+            <SectionTitle n={1}>Academic Background</SectionTitle>
             <CardDescription>Tell us about your education.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
@@ -201,7 +211,7 @@ export default function OnboardingPage() {
 
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>Prior Skills</CardTitle>
+            <SectionTitle n={2}>Prior Skills</SectionTitle>
             <CardDescription>Existing skills or certifications.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4">
@@ -228,7 +238,7 @@ export default function OnboardingPage() {
 
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>Socio-Economic</CardTitle>
+            <SectionTitle n={3}>Socio-Economic</SectionTitle>
             <CardDescription>Context that affects learning access.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
@@ -273,7 +283,7 @@ export default function OnboardingPage() {
 
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>Learning Preferences</CardTitle>
+            <SectionTitle n={4}>Learning Preferences</SectionTitle>
             <CardDescription>How you prefer to learn.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
@@ -318,7 +328,7 @@ export default function OnboardingPage() {
 
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle>Aspirations</CardTitle>
+            <SectionTitle n={5}>Aspirations</SectionTitle>
             <CardDescription>Your goals and target roles.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-4">

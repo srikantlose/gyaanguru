@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { NsqfRoadmap } from "@/components/nsqf-roadmap"
+import { PageHeader } from "@/components/page-header"
+import { SpotIllustration } from "@/components/illustrations"
 import { RoadmapVisualization } from "@/components/roadmap-visualization"
 
 interface CourseRoadmapData {
@@ -130,12 +132,19 @@ export default function NsqfDemoPage() {
   }
 
   return (
-    <div className="grid gap-6">
+    <main className="container mx-auto max-w-5xl px-4 py-10 sm:py-12">
+      <PageHeader
+        eyebrow="NSQF pathways"
+        tone="marigold"
+        title="Map your path across NSQF levels"
+        description="Enter your education, skills and goal. You'll get a three-step pathway from Level 3 to 6 with a course and job role at each step."
+        art={<SpotIllustration kind="nsqf" />}
+      />
       <Card>
         <CardHeader>
-          <CardTitle>NSQF Roadmap Generator (AI-Powered)</CardTitle>
+          <CardTitle className="text-xl">Your details</CardTitle>
           <CardDescription>
-            Creates a dynamic 3-level learning path aligned to NSQF levels 3–6. Drag to reorder steps.
+            We&apos;ll suggest a 3-level path aligned to NSQF levels 3–6. You can drag the steps to reorder them.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -157,18 +166,15 @@ export default function NsqfDemoPage() {
             <Button onClick={generateWithAI} disabled={aiLoading}>
               {aiLoading ? "Generating..." : "Generate with AI"}
             </Button>
-            {aiError && <span className="text-sm text-red-500">{aiError}</span>}
+            {aiError && <span className="text-sm text-coral-ink">{aiError}</span>}
           </div>
 
           {aiRoadmap && (
             <div className="mt-6 grid gap-3">
-              <div>
-                <div className="text-sm text-muted-foreground">AI Title</div>
-                <div className="font-semibold">{aiRoadmap.title}</div>
-              </div>
-              <div>
-                <div className="text-sm text-muted-foreground">Rationale</div>
-                <div className="text-sm leading-relaxed">{aiRoadmap.rationale}</div>
+              <div className="rounded-2xl bg-marigold-soft/60 p-5">
+                <p className="text-xs font-bold uppercase tracking-wider text-marigold-ink">Your pathway</p>
+                <h3 className="mt-1 text-xl font-bold text-ink">{aiRoadmap.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-ink/75">{aiRoadmap.rationale}</p>
               </div>
 
               <div className="flex items-center gap-3">
@@ -215,7 +221,7 @@ export default function NsqfDemoPage() {
                 >
                   {savingCourse ? "Saving..." : "View as Course"}
                 </Button>
-                {saveError && <span className="text-sm text-red-500">{saveError}</span>}
+                {saveError && <span className="text-sm text-coral-ink">{saveError}</span>}
               </div>
 
               <NsqfRoadmap initialNodes={aiRoadmap.nodes} />
@@ -223,6 +229,6 @@ export default function NsqfDemoPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </main>
   )
 }
