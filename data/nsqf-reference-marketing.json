@@ -1,0 +1,20 @@
+[
+  {
+    "level": 4,
+    "qualificationRequirement": "Class 12 + Certificate/Diploma",
+    "exampleJobRoles": ["Digital Marketing Intern", "Social Media Assistant"],
+    "courses": ["Digital Marketing Basics", "Social Media Fundamentals"]
+  },
+  {
+    "level": 5,
+    "qualificationRequirement": "Diploma/Advanced Certificate",
+    "exampleJobRoles": ["SEO Specialist", "Content Marketer"],
+    "courses": ["SEO Specialist Course", "Content Marketing L5"]
+  },
+  {
+    "level": 6,
+    "qualificationRequirement": "Undergraduate Degree or Advanced Diploma",
+    "exampleJobRoles": ["Digital Marketing Manager", "Marketing Analyst"],
+    "courses": ["Digital Marketing Advanced L6", "Analytics & Strategy L6"]
+  }
+]

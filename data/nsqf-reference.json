@@ -1,0 +1,26 @@
+[
+  {
+    "level": 3,
+    "qualificationRequirement": "Class 10–12 or equivalent",
+    "exampleJobRoles": ["Data Entry Operator", "Field Sales Trainee"],
+    "courses": ["Spreadsheet Fundamentals", "Customer Interaction Basics"]
+  },
+  {
+    "level": 4,
+    "qualificationRequirement": "Class 12 + Certificate/Diploma",
+    "exampleJobRoles": ["Technician", "Support Engineer (L1)"],
+    "courses": ["Technical Support Foundations", "Networking Essentials"]
+  },
+  {
+    "level": 5,
+    "qualificationRequirement": "Diploma/Advanced Certificate",
+    "exampleJobRoles": ["Assistant Engineer", "Team Lead (Entry)"],
+    "courses": ["Systems Administration Basics", "Quality Assurance Methods"]
+  },
+  {
+    "level": 6,
+    "qualificationRequirement": "Undergraduate Degree or Advanced Diploma",
+    "exampleJobRoles": ["Junior Engineer", "Operations Supervisor"],
+    "courses": ["Applied Project Management", "Advanced Data Analysis"]
+  }
+]
