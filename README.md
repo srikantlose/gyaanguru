@@ -76,3 +76,9 @@ The platform bridges **learners**, **trainers**, and **policymakers** through a 
 | **Blockchain Layer** | Polygon / Ethereum (via Alchemy SDK) |
 | **3D Models** | Trellis Text-to-3D |
 | **Hosting** | Vercel + Render + Supabase Edge Functions |
+
+---
+
+## 📄 License
+
+Released under the [MIT License](LICENSE).
