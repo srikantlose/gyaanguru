@@ -63,6 +63,12 @@ npm run lint         # eslint . (flat config in eslint.config.mjs; one file: npx
   - `@/lib/supabase/server` (async `createClient()`, cookie-based) in server components and route handlers.
   - `@/lib/supabase/client` in `"use client"` components (e.g. `components/header.tsx`, `app/onboarding/page.tsx`).
 - Queries filter by `user_id` explicitly even though RLS is enabled. Keep doing both.
+- **Sign-up:** if Supabase returns a session (email confirmation off), the user goes straight to `/onboarding`; otherwise to `/auth/sign-up-success`.
+- **Password reset:**
+  - `/auth/forgot-password` calls `resetPasswordForEmail` with `redirectTo` set to `/auth/reset-password`.
+  - That page waits for the browser client to read the link (PKCE code or hash) and then calls `updateUser({ password })`.
+  - The redirect URL must be in Supabase **Auth → URL Configuration → Redirect URLs**.
+  - Supabase's built-in mailer only delivers to the project team's addresses and has low hourly limits; real users need custom SMTP.
 
 ### Data model (Supabase)
 - **The schema lives in `scripts/schema.sql`.** It is a single idempotent file to run in the Supabase SQL editor, and it also upgrades databases built from the old migrations.

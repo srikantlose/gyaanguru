@@ -3,6 +3,7 @@
 import type React from "react"
 import { ChatIllustration } from "@/components/illustrations"
 import { cn } from "@/lib/utils"
+import { RichText } from "@/components/rich-text"
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
@@ -171,7 +172,7 @@ export function CareerGuidanceChat() {
                         {message.mode === "LLM" ? "General" : "Personalised"}
                       </Badge>
                     )}
-                    <p className="text-sm whitespace-pre-wrap leading-relaxed">{message.content}</p>
+                    <RichText text={message.content} className="text-sm leading-relaxed" />
                   </div>
                 </div>
               </div>

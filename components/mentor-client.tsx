@@ -12,6 +12,7 @@ import { Sticker } from "@/components/doodles"
 import type { LearnerSnapshot } from "@/lib/learner"
 import type { Achievement } from "@/lib/achievements"
 import { cn } from "@/lib/utils"
+import { RichText } from "@/components/rich-text"
 
 type Msg = { role: "user" | "assistant"; content: string }
 
@@ -128,7 +129,7 @@ export function MentorClient({ learner, achievements }: { learner: LearnerSnapsh
                         m.role === "user" ? "bg-marigold shadow-soft" : "bg-paper",
                       )}
                     >
-                      {m.content}
+                      {m.role === "assistant" ? <RichText text={m.content} /> : m.content}
                     </div>
                   </div>
                 ))}

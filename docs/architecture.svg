@@ -1,0 +1,154 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 760" role="img" aria-labelledby="t d">
+  <title id="t">GyaanGuru architecture</title>
+  <desc id="d">The browser talks to the Next.js server, which checks the Supabase session and calls Supabase Postgres, Google Gemini, the YouTube Data API and the Adzuna jobs API. Sign-in goes from the browser straight to Supabase Auth.</desc>
+  <defs>
+    <pattern id="rules" width="32" height="32" patternUnits="userSpaceOnUse">
+      <line x1="0" y1="31.5" x2="32" y2="31.5" stroke="#c8dbf0" stroke-width="1"/>
+    </pattern>
+    <marker id="arrow" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M1 1 L11 6 L1 11 Z" fill="#15171e"/>
+    </marker>
+    <style>
+      .display { font-family: "Arial Black", "Archivo Black", Impact, "Helvetica Neue", sans-serif; font-weight: 900; }
+      .body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+      .mono { font-family: ui-monospace, "Cascadia Code", Consolas, Menlo, monospace; }
+      .hand { font-family: "Kalam", "Segoe Print", "Bradley Hand", "Comic Sans MS", cursive; font-weight: 700; }
+      .box { stroke: #15171e; stroke-width: 3; }
+      .shadow { fill: #15171e; }
+      .wire { fill: none; stroke: #15171e; stroke-width: 3; }
+    </style>
+  </defs>
+
+  <rect width="1280" height="760" fill="#fff8e8"/>
+  <rect width="1280" height="760" fill="url(#rules)" opacity="0.7"/>
+  <line x1="44" y1="0" x2="44" y2="760" stroke="#f19a90" stroke-width="2.5"/>
+
+  <text x="80" y="62" class="display" font-size="30" fill="#15171e">HOW IT FITS TOGETHER</text>
+  <text x="82" y="94" class="hand" font-size="20" fill="#b23a27">one Next.js app · four outside services</text>
+
+  <!-- ===== Browser ===== -->
+  <rect x="88" y="140" width="290" height="420" rx="18" class="shadow"/>
+  <rect x="80" y="132" width="290" height="420" rx="18" fill="#ddeeff" class="box"/>
+  <text x="104" y="174" class="display" font-size="22" fill="#15171e">BROWSER</text>
+  <text x="104" y="198" class="body" font-size="15" fill="#1f5fa8" font-weight="700">React 19 pages</text>
+  <g class="body" font-size="15" fill="#15171e">
+    <g transform="translate(104 218)">
+      <rect width="242" height="40" rx="10" fill="#fff" class="box" stroke-width="2"/>
+      <text x="14" y="26">Home · NSQF explorer</text>
+    </g>
+    <g transform="translate(104 268)">
+      <rect width="242" height="40" rx="10" fill="#fff" class="box" stroke-width="2"/>
+      <text x="14" y="26">Dashboard · Generate</text>
+    </g>
+    <g transform="translate(104 318)">
+      <rect width="242" height="40" rx="10" fill="#fff" class="box" stroke-width="2"/>
+      <text x="14" y="26">Roadmap · lessons · quiz</text>
+    </g>
+    <g transform="translate(104 368)">
+      <rect width="242" height="40" rx="10" fill="#fff" class="box" stroke-width="2"/>
+      <text x="14" y="26">AI Mentor · Career tools</text>
+    </g>
+    <g transform="translate(104 418)">
+      <rect width="242" height="40" rx="10" fill="#fff" class="box" stroke-width="2"/>
+      <text x="14" y="26">Jobs · Profile</text>
+    </g>
+  </g>
+  <text x="104" y="500" class="mono" font-size="13" fill="#15171e">supabase-js (browser client)</text>
+  <text x="104" y="522" class="mono" font-size="13" fill="#15171e">for sign-up / login / reset</text>
+
+  <!-- ===== Next.js server ===== -->
+  <rect x="478" y="140" width="340" height="560" rx="18" class="shadow"/>
+  <rect x="470" y="132" width="340" height="560" rx="18" fill="#fff0c2" class="box"/>
+  <text x="494" y="174" class="display" font-size="22" fill="#15171e">NEXT.JS 16 SERVER</text>
+  <text x="494" y="198" class="body" font-size="15" fill="#7a4f00" font-weight="700">route handlers + server pages</text>
+
+  <g transform="translate(494 216)">
+    <rect width="292" height="56" rx="10" fill="#fff" class="box" stroke-width="2"/>
+    <text x="14" y="24" class="mono" font-size="14" font-weight="700" fill="#15171e">proxy.ts</text>
+    <text x="14" y="44" class="body" font-size="13" fill="#4f5566">refreshes the Supabase session cookie</text>
+  </g>
+  <g transform="translate(494 286)">
+    <rect width="292" height="214" rx="10" fill="#fff" class="box" stroke-width="2"/>
+    <text x="14" y="24" class="mono" font-size="14" font-weight="700" fill="#15171e">app/api/*  (login required)</text>
+    <g class="mono" font-size="12.5" fill="#15171e">
+      <text x="14" y="50">generate-roadmap</text><text x="154" y="50">generate-quiz</text>
+      <text x="14" y="70">generate-in-depth</text><text x="154" y="70">ai-instructor</text>
+      <text x="14" y="90">mentor</text><text x="154" y="90">career-guidance</text>
+      <text x="14" y="110">resume-match</text><text x="154" y="110">career-compare</text>
+      <text x="14" y="130">nsqf/*</text><text x="154" y="130">progress</text>
+      <text x="14" y="150">onboarding</text><text x="154" y="150">roadmaps/[id]</text>
+      <text x="14" y="170">youtube</text>
+      <text x="14" y="196" fill="#2f6b12">jobs/search  (public)</text>
+    </g>
+  </g>
+  <g transform="translate(494 514)">
+    <rect width="292" height="152" rx="10" fill="#fff" class="box" stroke-width="2"/>
+    <text x="14" y="24" class="mono" font-size="14" font-weight="700" fill="#15171e">lib/</text>
+    <g class="body" font-size="13" fill="#15171e">
+      <text x="14" y="48"><tspan class="mono" font-weight="700">gemini.ts</tspan>  retry + model fallback</text>
+      <text x="14" y="70"><tspan class="mono" font-weight="700">learner.ts</tspan>  progress, streak, goals</text>
+      <text x="14" y="92"><tspan class="mono" font-weight="700">nsqf.ts</tspan> · <tspan class="mono" font-weight="700">nsqf-path.ts</tspan></text>
+      <text x="14" y="114"><tspan class="mono" font-weight="700">achievements.ts</tspan>  badges</text>
+      <text x="14" y="136" fill="#4f5566">+ data/nsqf-reference*.json</text>
+    </g>
+  </g>
+
+  <!-- ===== Services ===== -->
+  <g>
+    <rect x="928" y="140" width="290" height="150" rx="18" class="shadow"/>
+    <rect x="920" y="132" width="290" height="150" rx="18" fill="#d6f5f1" class="box"/>
+    <text x="944" y="172" class="display" font-size="22" fill="#15171e">SUPABASE</text>
+    <g class="body" font-size="14" fill="#15171e">
+      <text x="944" y="200">Auth (email + password)</text>
+      <text x="944" y="222">Postgres with row-level security</text>
+      <text x="944" y="246" class="mono" font-size="12.5">profiles · roadmaps · progress</text>
+      <text x="944" y="266" class="mono" font-size="12.5">adjust_points()</text>
+    </g>
+  </g>
+  <g>
+    <rect x="928" y="320" width="290" height="132" rx="18" class="shadow"/>
+    <rect x="920" y="312" width="290" height="132" rx="18" fill="#ffe1db" class="box"/>
+    <text x="944" y="352" class="display" font-size="22" fill="#15171e">GOOGLE GEMINI</text>
+    <g class="body" font-size="14" fill="#15171e">
+      <text x="944" y="380">roadmaps, notes, quizzes,</text>
+      <text x="944" y="400">mentor, career tools</text>
+      <text x="944" y="426" class="mono" font-size="12.5">3.6-flash → fallback models</text>
+    </g>
+  </g>
+  <g>
+    <rect x="928" y="482" width="290" height="92" rx="18" class="shadow"/>
+    <rect x="920" y="474" width="290" height="92" rx="18" fill="#ffe3f1" class="box"/>
+    <text x="944" y="512" class="display" font-size="20" fill="#15171e">YOUTUBE DATA API</text>
+    <text x="944" y="544" class="body" font-size="14" fill="#15171e">lecture videos per lesson</text>
+  </g>
+  <g>
+    <rect x="928" y="604" width="290" height="92" rx="18" class="shadow"/>
+    <rect x="920" y="596" width="290" height="92" rx="18" fill="#e7f8da" class="box"/>
+    <text x="944" y="634" class="display" font-size="20" fill="#15171e">ADZUNA JOBS API</text>
+    <text x="944" y="666" class="body" font-size="14" fill="#15171e">live job listings in India</text>
+  </g>
+
+  <!-- ===== Wires ===== -->
+  <!-- browser <-> server -->
+  <path d="M370 300 L470 300" class="wire" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+  <text x="386" y="288" class="hand" font-size="15" fill="#15171e">fetch /api</text>
+  <!-- browser -> supabase auth (over the top) -->
+  <path d="M225 132 C 225 108, 240 104, 300 104 L 1040 104 C 1062 104, 1065 112, 1065 132" class="wire" stroke-dasharray="8 7" marker-end="url(#arrow)"/>
+  <text x="560" y="96" class="hand" font-size="16" fill="#1f5fa8">sign up · log in · reset password (straight to Supabase Auth)</text>
+  <!-- server -> services -->
+  <path d="M810 230 L920 210" class="wire" marker-end="url(#arrow)"/>
+  <text x="828" y="192" class="hand" font-size="14" fill="#15171e">as the user</text>
+  <path d="M810 390 L920 380" class="wire" marker-end="url(#arrow)"/>
+  <path d="M810 520 L920 520" class="wire" marker-end="url(#arrow)"/>
+  <path d="M810 640 L920 642" class="wire" marker-end="url(#arrow)"/>
+
+  <!-- sticky note -->
+  <g transform="translate(96 590) rotate(-2)">
+    <rect x="5" y="5" width="300" height="118" rx="6" class="shadow"/>
+    <rect width="300" height="118" rx="6" fill="#ffc83d" class="box"/>
+    <rect x="110" y="-12" width="80" height="22" fill="#ff7a66" opacity="0.8" transform="rotate(-4 150 0)"/>
+    <text x="16" y="34" class="hand" font-size="17" fill="#15171e">Keys stay on the server.</text>
+    <text x="16" y="60" class="hand" font-size="17" fill="#15171e">The browser only ever sees</text>
+    <text x="16" y="86" class="hand" font-size="17" fill="#15171e">the Supabase publishable key.</text>
+  </g>
+</svg>

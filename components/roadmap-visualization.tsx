@@ -21,6 +21,7 @@ import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { VisualRoadmap } from "./visual-roadmap"
 import { YouTubeLectures } from "./youtube-lectures" // new component for videos
+import { RichText } from "@/components/rich-text"
 
 interface RoadmapData {
   title: string
@@ -782,7 +783,7 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
                       message.role === "assistant" ? "bg-brand-soft" : "bg-muted ml-4",
                     )}
                   >
-                    <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                    <RichText text={message.content} className="text-sm leading-relaxed" />
                   </div>
                 ))}
                 {isLoadingAI && (
