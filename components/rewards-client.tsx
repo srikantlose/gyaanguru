@@ -168,8 +168,8 @@ export function RewardsClient({
           ))}
         </dl>
         <ul className="mt-4 flex flex-wrap gap-2 text-sm font-semibold text-ink">
-          <li className="rounded-full border-2 border-ink bg-card px-3 py-1">+{POINTS_PER_LESSON} for each new lesson</li>
-          <li className="rounded-full border-2 border-ink bg-card px-3 py-1">+60 to +320 for finishing a roadmap</li>
+          <li className="rounded-full border-2 border-ink bg-card px-3 py-1">+{POINTS_PER_LESSON} for passing a lesson quiz</li>
+          <li className="rounded-full border-2 border-ink bg-card px-3 py-1">+60 to +320 for verifying a roadmap</li>
           <li className="rounded-full border-2 border-ink bg-card px-3 py-1">badges at 1, 5 and 10 roadmaps</li>
         </ul>
       </section>
@@ -224,8 +224,8 @@ export function RewardsClient({
                       </p>
                     )
                   } else if (item.perk === "certificate") {
-                    if (finished.length === 0) blocked = "Finish a roadmap first"
-                    else if (!certTarget) blocked = "All your finished roadmaps have one"
+                    if (finished.length === 0) blocked = "Verify a roadmap first"
+                    else if (!certTarget) blocked = "All your verified roadmaps have one"
                     extra =
                       uncertified.length > 0 ? (
                         <label className="block text-sm font-semibold text-ink">
@@ -244,7 +244,12 @@ export function RewardsClient({
                         </label>
                       ) : finished.length > 0 ? (
                         <CertificateLinks roadmaps={finished.filter((r) => r.certified)} />
-                      ) : null
+                      ) : (
+                        <p className="text-sm text-ink/70">
+                          Verify a roadmap: pass every lesson quiz, then get your recap approved from the lesson page&apos;s
+                          bonus checklist.
+                        </p>
+                      )
                   } else if (item.perk === "sticker_pack" && stickerPack) {
                     blocked = "Unlocked"
                     extra = (
@@ -308,7 +313,7 @@ export function RewardsClient({
               <p className="text-sm text-ink/60">Every point in and out, newest first{rewards.events.length >= 50 ? " (last 50)" : ""}.</p>
             </div>
             {rewards.events.length === 0 ? (
-              <p className="px-5 py-8 text-center text-ink/70">Nothing here yet. Finish a lesson to earn your first {POINTS_PER_LESSON} points.</p>
+              <p className="px-5 py-8 text-center text-ink/70">Nothing here yet. Pass a lesson quiz to earn your first {POINTS_PER_LESSON} points.</p>
             ) : (
               <ol className="divide-y divide-border">
                 {rewards.events.map((e) => {

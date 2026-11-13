@@ -42,6 +42,8 @@ export type LearnerSnapshot = {
   stickerPack: boolean
   /** Roadmap ids that have a Completion Certificate. */
   certificates: string[]
+  /** Roadmap ids verified by passing every lesson quiz and an approved recap. */
+  verifiedRoadmaps: string[]
   /** Active reward catalog (name and cost), so the mentor can talk about what points buy. */
   rewards: { name: string; cost: number; demo: boolean }[]
   goals: { shortTerm: string; longTerm: string; targetRole: string }
@@ -88,7 +90,7 @@ export function computeStreak(active: Set<string>, freezeDays: string[], today: 
 
 /** Loads everything the learner-facing features need, using the caller's RLS-scoped client. */
 export async function loadLearner(supabase: SupabaseServerClient, userId: string): Promise<LearnerSnapshot> {
-  const [{ data: profile }, { data: roadmapRows }, { data: progressRows }, eventsRes, redemptionsRes, catalogRes] = await Promise.all([
+  const [{ data: profile }, { data: roadmapRows }, { data: progressRows }, eventsRes, redemptionsRes, catalogRes, verifiedRes] = await Promise.all([
     supabase.from("profiles").select("full_name, points, onboarded, onboarding_data").eq("id", userId).single(),
     supabase
       .from("roadmaps")
@@ -100,6 +102,7 @@ export async function loadLearner(supabase: SupabaseServerClient, userId: string
     supabase.from("point_events").select("amount, kind, ref, created_at").eq("user_id", userId),
     supabase.from("reward_redemptions").select("reward_id, target_id, created_at").eq("user_id", userId),
     supabase.from("reward_catalog").select("name, cost, kind").eq("active", true).order("sort", { ascending: true }),
+    supabase.rpc("verified_roadmaps"),
   ])
   const events = eventsRes.data ?? []
   const redemptions = redemptionsRes.data ?? []
@@ -205,6 +208,7 @@ export async function loadLearner(supabase: SupabaseServerClient, userId: string
     freezesAvailable,
     stickerPack: redemptions.some((r) => r.reward_id === "sticker-pack"),
     certificates: redemptions.filter((r) => r.reward_id === "completion-certificate" && r.target_id).map((r) => r.target_id as string),
+    verifiedRoadmaps: Array.isArray(verifiedRes.data) ? (verifiedRes.data as string[]) : [],
     rewards: (catalogRes.data ?? []).map((r) => ({ name: r.name, cost: Number(r.cost), demo: r.kind !== "perk" })),
     goals: {
       shortTerm: onboarding.aspirations?.shortTermGoal ?? "",
@@ -226,7 +230,7 @@ export function describeLearner(l: LearnerSnapshot): string {
     `Learning preferences: ${[o.learningPreferences?.mode, o.learningPreferences?.pace, o.learningPreferences?.hoursPerWeek && `${o.learningPreferences.hoursPerWeek} h/week`, o.learningPreferences?.preferredLanguage].filter(Boolean).join(", ") || "not given"}`,
     `Goals: short-term "${l.goals.shortTerm || "-"}", long-term "${l.goals.longTerm || "-"}", target role "${l.goals.targetRole || "-"}"`,
     `Progress: ${l.topicsDone}/${l.totalTopics} lessons done, ${l.roadmapsFinished} roadmap(s) finished, ${l.hoursLearned} h learned, ${l.streak}-day streak${l.freezesAvailable ? ` (${l.freezesAvailable} Streak Freeze(s) saved)` : ""}`,
-    `Points: ${l.points} to spend (${l.pointsEarned} earned, ${l.pointsSpent} spent). Each new lesson pays 5; finishing a roadmap pays a bonus of max(60, 8 x lessons).`,
+    `Points: ${l.points} to spend (${l.pointsEarned} earned, ${l.pointsSpent} spent). Passing a lesson's quiz pays 5 (ticking a lesson pays nothing); a verified roadmap (every quiz passed plus an approved recap) pays a bonus of max(60, 8 x lessons) and unlocks a certificate.`,
   ]
   if (l.rewards.length) {
     lines.push(`Rewards points can buy on the /rewards page: ${l.rewards.map((r) => `${r.name} (${r.cost}${r.demo ? ", demo item, nothing is delivered" : ""})`).join(", ")}`)

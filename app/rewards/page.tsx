@@ -30,8 +30,9 @@ export default async function RewardsPage() {
     console.error("Error loading rewards:", error)
   }
 
+  // Certificates are for verified roadmaps: every lesson quiz passed and the recap approved.
   const finished = learner.roadmaps
-    .filter((r) => r.total > 0 && r.done === r.total)
+    .filter((r) => learner.verifiedRoadmaps.includes(r.id))
     .map((r) => ({ id: r.id, title: r.title, certified: learner.certificates.includes(r.id) }))
 
   return (
@@ -42,7 +43,7 @@ export default async function RewardsPage() {
           tone="marigold"
           title="Points, badges & treats"
           note="learn → earn → treat yourself"
-          description="Every new lesson you finish pays 5 points, and finishing a whole roadmap pays a bonus. Spend them on perks that help you keep going."
+          description="Pass a lesson's quiz to earn 5 points. Prove you've learned a whole roadmap with its quizzes and a short recap to earn a bonus. Spend points on perks that help you keep going."
           art={<RewardsIllustration />}
         />
         <RewardsClient

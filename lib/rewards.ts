@@ -8,12 +8,29 @@ type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>
  * the shared types, display copy and the read side.
  */
 
+/** Points for passing a lesson's quiz (paid once per lesson). Mirrors award_lesson_quiz() in scripts/schema.sql. */
 export const POINTS_PER_LESSON = 5
 
-/** Bonus for finishing every lesson in a roadmap. Mirrors complete_topic() in scripts/schema.sql. */
+/** Bonus for a verified roadmap. Mirrors award_roadmap_bonus() in scripts/schema.sql. */
 export function roadmapBonus(lessons: number) {
   return Math.max(60, 8 * Math.min(lessons, 40))
 }
+
+// Proof-of-learning rules. The server enforces all of these; the UI only explains them.
+/** Fraction of a quiz's questions needed to pass (3 of 4). */
+export const QUIZ_PASS_RATIO = 0.75
+export const quizPassMark = (total: number) => Math.ceil(total * QUIZ_PASS_RATIO)
+/** A lesson's quiz unlocks this long after the lesson was first opened. */
+export const QUIZ_UNLOCK_MINUTES = 3
+/** A quiz must be submitted within this long of being handed out. */
+export const QUIZ_TIME_LIMIT_MINUTES = 60
+/** Lessons that can pay points per day (India time). Also hard-coded in award_lesson_quiz(). */
+export const DAILY_PAID_LESSONS = 15
+export const QUIZ_STARTS_PER_LESSON_PER_HOUR = 5
+export const QUIZ_STARTS_PER_DAY = 60
+export const RECAP_MIN_CHARS = 80
+export const RECAP_MAX_CHARS = 1500
+export const RECAP_ATTEMPTS_PER_DAY = 5
 
 export type RewardTone = "brand" | "marigold" | "coral" | "lagoon" | "leaf" | "bubblegum"
 export type PerkKind = "streak_freeze" | "certificate" | "sticker_pack"
@@ -142,6 +159,10 @@ export function rewardErrorResponse(message: string | undefined): { status: numb
       return { status: 409, error: "You already have this one." }
     case "roadmap_not_finished":
       return { status: 400, error: "Finish every lesson in that roadmap first." }
+    case "roadmap_not_verified":
+      return { status: 400, error: "Verify that roadmap first: pass every lesson quiz and get your recap approved." }
+    case "quiz_not_passed":
+      return { status: 400, error: "Pass this lesson's quiz first." }
     case "target_required":
       return { status: 400, error: "Pick which finished roadmap the certificate is for." }
     case "reward_not_found":

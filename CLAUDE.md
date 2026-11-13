@@ -40,6 +40,7 @@ npm run lint         # eslint . (flat config in eslint.config.mjs; one file: npx
 | Variable | Used by |
 |---|---|
 | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | all Supabase clients |
+| `SUPABASE_SECRET_KEY` | **server only** (`lib/supabase/admin.ts`). Quizzes, recaps and points need it; without it the quiz routes return 503 and the lesson page says quizzes are off. Never prefix it with `NEXT_PUBLIC_` |
 | `GEMINI_API_KEY` | all AI routes, via `lib/gemini.ts` |
 | `GEMINI_MODEL` | optional model override (default `gemini-3.6-flash`) |
 | `GEMINI_BASE_URL` | optional proxy/gateway in front of the Gemini API; also used to point at a local stub for testing |
@@ -61,6 +62,7 @@ npm run lint         # eslint . (flat config in eslint.config.mjs; one file: npx
   - Keep the routes that spend Gemini or YouTube quota behind login.
 - Which client to use:
   - `@/lib/supabase/server` (async `createClient()`, cookie-based) in server components and route handlers.
+  - `@/lib/supabase/admin` (`createAdminClient()`, secret key, **bypasses RLS**, `server-only`): only in route handlers, after checking the user, for the quiz, recap and lesson-view tables and the server-only award functions. Returns `null` when `SUPABASE_SECRET_KEY` is unset.
   - `@/lib/supabase/client` in `"use client"` components (e.g. `components/header.tsx`, `app/onboarding/page.tsx`).
 - Queries filter by `user_id` explicitly even though RLS is enabled. Keep doing both.
 - **Sign-up:** if Supabase returns a session (email confirmation off), the user goes straight to `/onboarding`; otherwise to `/auth/sign-up-success`.
@@ -84,27 +86,50 @@ npm run lint         # eslint . (flat config in eslint.config.mjs; one file: npx
 - **`progress`**: one row per completed topic, keyed by **`(user_id, roadmap_id, module_index, topic_index)`**.
   - Rows are keyed by array position, not by topic `id`. Reordering a roadmap's modules or topics would orphan progress rows.
   - Un-completing a topic deletes its row.
-  - Users can only read it. Rows are written by `complete_topic()` / `uncomplete_topic()`, which check that the lesson exists in the roadmap's `content`.
+  - Users can only read it. Rows are written by `complete_topic()` / `uncomplete_topic()` (which check that the lesson exists in the roadmap's `content`) and by `award_lesson_quiz()` when a quiz is passed.
 - `/api/onboarding` returns `412 SchemaNotMigrated` when the onboarding columns are missing. `/api/progress` and `/api/rewards` do the same when the points tables or functions are missing.
 
 ### Points and rewards
-- **The rules live in SQL** (`scripts/schema.sql`), so they can't be bypassed with the publishable key. All three functions are `security definer`, act on `auth.uid()`, and are executable by `authenticated` only:
-  - `complete_topic(roadmap, module, topic)`: ticks the lesson. Pays **+5 the first time that lesson is ever ticked**, and the roadmap bonus **`max(60, 8 × lessons)`, with lessons capped at 40** the first time every lesson is ticked. It locks the roadmap row, so two lessons finished at once pay the bonus exactly once.
-  - `uncomplete_topic(...)`: removes the tick only. Points already earned stay, and re-ticking pays nothing, so there's no farming.
-  - `redeem_reward(reward_id, target_id?)`: locks the profile row, checks the per-kind rules and the balance, then deducts. Concurrent redemptions can't overdraw.
+- **Points are for proof of learning, not ticks.** Ticking a lesson only tracks progress and pays nothing.
+  - **+5** for passing a lesson's quiz, paid once per lesson.
+  - The **roadmap bonus** `max(60, 8 × lessons)`, with lessons capped at 40, is paid once the roadmap is **verified**: every lesson quiz passed *and* a recap approved.
+  - The Completion Certificate also needs a verified roadmap.
+- **Quizzes are marked on the server** (`/api/quiz/start` → `/api/quiz/submit`, code in `lib/quiz.ts`):
+  - The questions *and answers* are stored in `lesson_quizzes`. The browser only ever gets questions and options; answers and explanations come back after submitting.
+  - Pass mark: 3 of 4 (`QUIZ_PASS_RATIO`).
+  - Each quiz can be submitted once, within 60 minutes. A retry is a new quiz with fresh questions.
+  - Rate limits: 5 starts per lesson per hour, 60 per day.
+  - **Pacing:** `lesson_views` records when a lesson was first opened, from the notes fetch → `/api/lessons/view`. Its quiz unlocks 3 minutes later; `/api/quiz/start` returns **425** until then.
+  - **Daily cap:** at most 15 lessons pay points per India day. A pass beyond that still ticks the lesson but pays 0 (`reason: "daily_limit"`), and passing again another day pays.
+- **Recap** (`/api/recap`):
+  - Only after every quiz is passed.
+  - 80–1500 characters, 5 tries per roadmap per day.
+  - Gemini (`checkRecap`) approves it only if it explains at least two specific things from the lessons in the learner's own words. The recap sits inside `<recap>` tags and the prompt tells the model to ignore instructions in it.
+  - Approval calls `award_roadmap_bonus`.
+  - The lesson view's "Bonus checklist" (`components/roadmap-verify.tsx`) shows quiz status per lesson and the recap form.
+- **Trust boundary: the secret key.** `lesson_views`, `lesson_quizzes` and `roadmap_recaps` have RLS on with no policies, so learners can't read or write them; only the server's `createAdminClient()` (service_role) can. Without that, a learner could write themselves a "passed" quiz.
+- **SQL functions** (`scripts/schema.sql`):
+  - For learners (`authenticated`, acting on `auth.uid()`):
+    - `complete_topic` / `uncomplete_topic`: tick or untick only.
+    - `redeem_reward(reward_id, target_id?)`: locks the profile row, checks the per-kind rules and the balance, then deducts. Concurrent redemptions can't overdraw.
+    - `quiz_status(roadmap)`: passed lessons, plus whether the recap is approved and the bonus paid. Read by `GET /api/progress`.
+    - `verified_roadmaps()`: certificate eligibility. Read by `loadLearner`.
+  - Server only (`service_role`):
+    - `award_lesson_quiz(user, roadmap, module, topic)`: requires a passed quiz row; ticks the lesson, pays +5 subject to the daily cap, then tries the bonus.
+    - `award_roadmap_bonus(user, roadmap)`: pays once if `roadmap_verified`. It locks the roadmap row, so concurrent calls pay exactly once.
   - `adjust_points()` was removed: it let any signed-in user add any number of points.
 - **`point_events` is the ledger.** Every points change has a row (`topic`, `roadmap_bonus`, `redeem`, `adjust`), and `profiles.points` always equals the sum. Award rows are unique on `(user_id, kind, ref)`, which is what makes awards idempotent. The schema backfills a `topic` row per existing `progress` row plus an `adjust` "opening balance" row, so older balances carry over.
 - **`reward_catalog`** is seeded by the schema:
   - `kind = 'perk'` items work in the app (`perk` column):
     - `streak_freeze`: covers one missed day.
-    - `certificate`: once per finished roadmap, unlocks `/certificate/[roadmapId]`, which is printable.
+    - `certificate`: once per **verified** roadmap, unlocks `/certificate/[roadmapId]`, which is printable.
     - `sticker_pack`: once, adds draggable stickers on the dashboard.
   - `kind = 'demo'` items (the six vouchers and packs) take the points and log a `requested` redemption, but nothing is delivered. The UI says so.
   - `tone` is one of the pop colors.
 - **`reward_redemptions`**: perks are `active`, demo items are `requested`. Partial unique indexes back up the one-certificate-per-roadmap and one-sticker-pack rules.
 - **Read side:**
   - `lib/rewards.ts` (`loadRewards`, error text for each SQL exception, `roadmapBonus()` for display).
-  - `lib/learner.ts` adds `pointsEarned`, `pointsSpent`, `roadmapsFinished` (finished now, or ever via a bonus row), `freezesAvailable`, `stickerPack`, `certificates` and `rewards`.
+  - `lib/learner.ts` adds `pointsEarned`, `pointsSpent`, `roadmapsFinished` (finished now, or ever via a bonus row), `verifiedRoadmaps`, `freezesAvailable`, `stickerPack`, `certificates` and `rewards`.
 - **Streaks:**
   - Days are keyed in **`Asia/Kolkata`**.
   - Activity comes from the first-tick time of each lesson, using its ledger row when there is one, so unticking doesn't erase history.
@@ -112,16 +137,21 @@ npm run lint         # eslint . (flat config in eslint.config.mjs; one file: npx
 - **Badges:** `lib/achievements.ts` (10 badges) uses `roadmapsFinished` and lifetime `pointsEarned`, so redeeming or unticking never takes a badge away.
 - **UI:**
   - `/rewards`: `components/rewards-client.tsx`. It redeems through a confirm dialog, then calls `router.refresh()`.
-  - In the lesson view, `toggleTopic` rolls back on failure and shows the error, and shows a "+5" pop and a "Roadmap finished" card.
+  - In the lesson view:
+    - `toggleTopic` rolls back on failure and shows the error.
+    - A passed quiz shows a "+5" pop and stars the lesson in the outline.
+    - Ticking the last lesson prompts the bonus checklist; verification shows a "Roadmap verified" card.
   - The dashboard Points tile links to `/rewards`.
   - The header has a Rewards link.
-- **Accepted gap:** users can still insert their own `roadmaps` rows with any `content`, so a determined user could make a fake roadmap and finish it for points. The 40-lesson cap limits each roadmap. If rewards ever have real value, roadmap writes must move server-side.
+- **Accepted gaps:**
+  - Users can still insert their own `roadmaps` rows with any `content`, so a determined user could make an easy fake roadmap and pass its quizzes. The daily cap and the 40-lesson cap limit the damage. If rewards ever have real value, roadmap writes must move server-side too.
+  - Quizzes can be passed by looking answers up. That's still more learning than a tick.
 
 ### AI routes (Gemini)
 - All Gemini calls go through `lib/gemini.ts`, built on the `@google/genai` SDK:
   - `generateText(contents, { systemInstruction, temperature, json })` handles single prompts and multi-turn `Content[]`.
   - `generateJson(prompt)` uses JSON response mode, then `extractJsonPayload` (a fenced block, else the outermost `{...}`). It throws `ModelOutputError` on non-JSON.
-- **Every JSON route validates with zod before using the output:** `generate-roadmap`, `generate-quiz`, `generate-in-depth`, `nsqf/ai-roadmap`. Keep response shapes stable: client components read `response`, `text`, `content`, `quiz` and `roadmap` directly.
+- **Every JSON route validates with zod before using the output:** `generate-roadmap`, `quiz/start` (via `lib/quiz.ts`), `recap`, `generate-in-depth`, `nsqf/ai-roadmap`. Keep response shapes stable: client components read `response`, `text`, `content`, `quiz` and `roadmap` directly.
 - **Resilience** (`generateText`):
   - Retries 429/5xx, then falls back through `GEMINI_FALLBACK_MODELS` (default `gemini-3.5-flash-lite, gemini-3.7-flash, gemini-3.8-flash, gemini-3.5-flash`).
   - A 404 (model not offered to this key; `gemini-2.5-flash` is closed to new users) or a used-up *daily* quota skips straight to the next model.
@@ -150,7 +180,7 @@ npm run lint         # eslint . (flat config in eslint.config.mjs; one file: npx
 1. `/generate` → `components/roadmap-generator.tsx` → `POST /api/generate-roadmap`, which generates the roadmap and inserts it into `roadmaps`.
 2. `/roadmap/[id]`: the server component loads the roadmap and passes it to `components/roadmap-visualization.tsx`.
    - This is a large client component (~900 lines) and the hub of the learning UI.
-   - It handles progress (`/api/progress`), in-depth notes (SWR → `/api/generate-in-depth`), the AI instructor (`/api/ai-instructor`), quizzes (`/api/generate-quiz`) and YouTube lectures.
+   - It handles progress (`/api/progress`), in-depth notes (SWR → `/api/generate-in-depth`), the AI instructor (`/api/ai-instructor`), server-marked quizzes (`/api/quiz/start` and `/api/quiz/submit`), the bonus checklist and YouTube lectures.
    - `components/visual-roadmap.tsx` renders the same data with `@xyflow/react`. Custom nodes need `<Handle>`s with ids matching each edge's `sourceHandle`/`targetHandle`, or edges silently don't render.
 3. `/dashboard` computes completion per roadmap from one `progress` query: rows ÷ topics in `content.modules`.
 - **Onboarding and profile autosave:** triggered from edit handlers (`update`), never from an effect on the form state. An effect would also fire on mount and could overwrite saved answers with the empty form.

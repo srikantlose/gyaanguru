@@ -29,8 +29,7 @@ export async function POST(request: Request) {
     }
     const { roadmapId, moduleIndex, topicIndex, completed } = parsed.data
 
-    // Ticking and points happen together in SQL (scripts/schema.sql): a lesson pays +5 once ever,
-    // and finishing every lesson pays the roadmap bonus once. Unticking never changes points.
+    // Ticking only tracks progress; points come from passing the lesson quiz (/api/quiz/submit).
     const { data, error } = await supabase.rpc(completed ? "complete_topic" : "uncomplete_topic", {
       p_roadmap_id: roadmapId,
       p_module_index: moduleIndex,
@@ -88,7 +87,17 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Failed to fetch progress" }, { status: 500 })
     }
 
-    return NextResponse.json({ progress })
+    // Which lessons have a passed quiz, and whether the recap/bonus are done. Soft-fails (empty)
+    // until scripts/schema.sql has the quiz tables.
+    const { data: status } = await supabase.rpc("quiz_status", { p_roadmap_id: roadmapId })
+    const quiz = {
+      enabled: Boolean(process.env.SUPABASE_SECRET_KEY?.trim()),
+      passed: Array.isArray(status?.passed) ? (status.passed as [number, number][]) : [],
+      recapApproved: Boolean(status?.recap_approved),
+      bonusPaid: Boolean(status?.bonus_paid),
+    }
+
+    return NextResponse.json({ progress, quiz })
   } catch (error) {
     console.error("Error fetching progress:", error)
     return NextResponse.json({ error: "Failed to fetch progress" }, { status: 500 })

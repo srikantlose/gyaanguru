@@ -62,7 +62,7 @@ const notes: {
   },
   {
     title: "Points, badges & rewards",
-    description: "Every lesson earns points and finishing a roadmap pays a bonus. Collect badges, then spend points on streak freezes, certificates and more.",
+    description: "Pass lesson quizzes to earn points, prove a whole roadmap for a bonus, collect badges, then spend points on streak freezes, certificates and more.",
     tone: "lagoon",
     tape: "leaf",
     tilt: 2,

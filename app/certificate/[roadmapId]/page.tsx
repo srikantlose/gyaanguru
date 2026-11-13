@@ -67,8 +67,8 @@ export default async function CertificatePage({ params }: { params: Promise<{ ro
           </span>
           <h1 className="mt-5 text-2xl text-ink">This certificate isn&apos;t unlocked yet</h1>
           <p className="mt-2 text-ink/70">
-            Finish every lesson in <strong className="text-ink">{roadmap.title}</strong>, then redeem a Completion Certificate on
-            the rewards page.
+            Pass every lesson quiz in <strong className="text-ink">{roadmap.title}</strong> and get your recap approved, then
+            redeem a Completion Certificate on the rewards page.
           </p>
           <Button asChild className="mt-6">
             <Link href="/rewards">Go to rewards</Link>
@@ -110,7 +110,7 @@ export default async function CertificatePage({ params }: { params: Promise<{ ro
           <p className="mt-8 font-display text-sm font-extrabold uppercase tracking-[0.3em] text-coral-ink">Certificate of completion</p>
           <p className="mt-6 text-ink/70">This is to certify that</p>
           <p className="mt-2 break-words font-display text-3xl font-black text-ink sm:text-5xl">{name}</p>
-          <p className="mt-4 text-ink/70">completed every lesson of the GyaanGuru learning roadmap</p>
+          <p className="mt-4 text-ink/70">completed and passed the quiz for every lesson of the GyaanGuru learning roadmap</p>
           <p className="mt-3 text-2xl font-extrabold leading-snug text-ink sm:text-3xl">
             <span className="marker">{roadmap.title}</span>
           </p>

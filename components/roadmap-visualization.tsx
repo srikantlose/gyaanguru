@@ -15,11 +15,15 @@ import {
   Send,
   BookOpen,
   Network,
+  Loader2,
   PartyPopper,
+  ShieldCheck,
   Star,
   TriangleAlert,
 } from "lucide-react"
 import Link from "next/link"
+import { RoadmapVerifyDialog } from "@/components/roadmap-verify"
+import { DAILY_PAID_LESSONS, POINTS_PER_LESSON, QUIZ_UNLOCK_MINUTES, quizPassMark, roadmapBonus as bonusForLessons } from "@/lib/rewards"
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -57,6 +61,35 @@ interface Message {
   content: string
 }
 
+/** A quiz as the browser sees it: questions and options only, the answers stay on the server. */
+interface QuizState {
+  quizId: string
+  questions: { question: string; options: string[] }[]
+  passMark: number
+  alreadyPaid: boolean
+  dailyLimitReached: boolean
+  lesson: { moduleIndex: number; topicIndex: number; topicId: string }
+}
+
+interface QuizResult {
+  score: number
+  total: number
+  passMark: number
+  passed: boolean
+  results: { correctAnswer: number; explanation: string }[]
+  award: { topic: number; bonus: number; reason: "paid" | "already_paid" | "daily_limit"; points: number } | null
+}
+
+interface QuizStatus {
+  enabled: boolean
+  /** "moduleIndex:topicIndex" of lessons whose quiz has been passed. */
+  passed: Set<string>
+  recapApproved: boolean
+  bonusPaid: boolean
+}
+
+const lessonKey = (moduleIndex: number, topicIndex: number) => `${moduleIndex}:${topicIndex}`
+
 export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVisualizationProps) {
   const [completedTopics, setCompletedTopics] = useState<Set<string>>(new Set())
   const [expandedModules, setExpandedModules] = useState<Set<string>>(new Set([roadmap.modules[0]?.id]))
@@ -70,11 +103,16 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
   const [inputMessage, setInputMessage] = useState("")
   const [isLoadingAI, setIsLoadingAI] = useState(false)
   const [showQuiz, setShowQuiz] = useState(false)
-  const [quizData, setQuizData] = useState<any>(null)
+  const [quizData, setQuizData] = useState<QuizState | null>(null)
+  const [quizResult, setQuizResult] = useState<QuizResult | null>(null)
   const [isLoadingQuiz, setIsLoadingQuiz] = useState(false)
+  const [isSubmittingQuiz, setIsSubmittingQuiz] = useState(false)
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({})
-  const [quizSubmitted, setQuizSubmitted] = useState(false)
   const [quizError, setQuizError] = useState<string | null>(null)
+  const [quizStatus, setQuizStatus] = useState<QuizStatus>({ enabled: true, passed: new Set(), recapApproved: false, bonusPaid: false })
+  const [showVerify, setShowVerify] = useState(false)
+  const [finishPrompt, setFinishPrompt] = useState(false)
+  const quizSubmitted = quizResult !== null
   // Points feedback: a "+5" pop per new lesson, a card when the roadmap bonus is paid, and save errors.
   const [pointsPop, setPointsPop] = useState<{ id: number; amount: number } | null>(null)
   const [roadmapBonus, setRoadmapBonus] = useState<number | null>(null)
@@ -98,7 +136,7 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
       try {
         const response = await fetch(`/api/progress?roadmapId=${roadmapId}`)
         if (response.ok) {
-          const { progress } = await response.json()
+          const { progress, quiz } = await response.json()
           const completed = new Set<string>()
 
           progress.forEach((item: { module_index: number; topic_index: number }) => {
@@ -109,6 +147,14 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
           })
 
           setCompletedTopics(completed)
+          if (quiz) {
+            setQuizStatus({
+              enabled: quiz.enabled !== false,
+              passed: new Set((quiz.passed ?? []).map(([m, t]: [number, number]) => lessonKey(m, t))),
+              recapApproved: Boolean(quiz.recapApproved),
+              bonusPaid: Boolean(quiz.bonusPaid),
+            })
+          }
 
           if (progress.length > 0 && progress.length < roadmap.modules.reduce((acc, m) => acc + m.topics.length, 0)) {
             let foundIncomplete = false
@@ -136,6 +182,12 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
 
     loadProgress()
   }, [roadmapId, roadmap.modules])
+
+  const showPointsPop = (amount: number) => {
+    const id = ++popCounter.current
+    setPointsPop({ id, amount })
+    setTimeout(() => setPointsPop((p) => (p?.id === id ? null : p)), 2200)
+  }
 
   const toggleTopic = async (topicId: string, moduleIndex: number, topicIndex: number) => {
     const isCurrentlyCompleted = completedTopics.has(topicId)
@@ -165,14 +217,9 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
       const data = await response.json().catch(() => ({}))
       if (!response.ok) throw new Error(data?.error || "Couldn't save your progress.")
 
-      const earned = Number(data?.awarded?.topic) || 0
-      const bonus = Number(data?.awarded?.bonus) || 0
-      if (earned > 0) {
-        const id = ++popCounter.current
-        setPointsPop({ id, amount: earned })
-        setTimeout(() => setPointsPop((p) => (p?.id === id ? null : p)), 2200)
-      }
-      if (bonus > 0) setRoadmapBonus(bonus)
+      // Ticking pays nothing; points come from quizzes. Once every lesson is ticked, point the
+      // learner at the verification checklist (quizzes + recap) for the bonus.
+      if (data?.finished && !isCurrentlyCompleted && !quizStatus.bonusPaid) setFinishPrompt(true)
     } catch (error) {
       console.error("Error saving progress:", error)
       flip(isCurrentlyCompleted)
@@ -219,6 +266,12 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
     async ([, _rid, mIdx, tIdx]) => {
       const mod = roadmap.modules[mIdx as number]
       const topic = mod.topics[tIdx as number]
+      // Starts the clock for this lesson's quiz (it unlocks a few minutes after first opening).
+      void fetch("/api/lessons/view", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ roadmapId, moduleIndex: mIdx, topicIndex: tIdx }),
+      }).catch(() => {})
       const res = await fetch("/api/generate-in-depth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -321,33 +374,27 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
   }
 
   const handleGenerateQuiz = async () => {
-    if (!currentTopic) return
+    if (!currentTopic || !selectedTopic) return
+    const lesson = { moduleIndex: selectedTopic.moduleIndex, topicIndex: selectedTopic.topicIndex, topicId: currentTopic.id }
 
     setIsLoadingQuiz(true)
     setShowQuiz(true)
     setQuizError(null)
+    setQuizResult(null)
 
     try {
-      const response = await fetch("/api/generate-quiz", {
+      const response = await fetch("/api/quiz/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          topic: currentTopic.title,
-          description: currentTopic.description,
-        }),
+        body: JSON.stringify({ roadmapId, moduleIndex: lesson.moduleIndex, topicIndex: lesson.topicIndex }),
       })
-
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}))
-        throw new Error(err?.error || "Failed to generate quiz")
-      }
-
-      const data = await response.json()
-      setQuizData(data.quiz)
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(data?.error || "Failed to generate quiz")
+      setQuizData({ ...data, lesson })
       setSelectedAnswers({})
-      setQuizSubmitted(false)
     } catch (error) {
-      console.error("Error generating quiz:", error)
+      // Shown in the quiz panel (locked, rate-limited, AI busy...), so no console noise.
+      setQuizData(null)
       setQuizError(error instanceof Error ? error.message : "Failed to generate quiz")
     } finally {
       setIsLoadingQuiz(false)
@@ -360,12 +407,63 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
     }
   }
 
-  const handleSubmitQuiz = () => {
-    setQuizSubmitted(true)
+  // The server marks the quiz; a pass ticks the lesson and pays for it.
+  const handleSubmitQuiz = async () => {
+    if (!quizData) return
+    setIsSubmittingQuiz(true)
+    setQuizError(null)
+    try {
+      const response = await fetch("/api/quiz/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quizId: quizData.quizId, answers: quizData.questions.map((_, i) => selectedAnswers[i] ?? -1) }),
+      })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(data?.error || "Couldn't mark the quiz. Please try again.")
+      const result = data as QuizResult
+      setQuizResult(result)
+      if (result.passed) {
+        const { moduleIndex, topicIndex, topicId } = quizData.lesson
+        const topicAward = result.award?.topic ?? 0
+        const bonus = result.award?.bonus ?? 0
+        setCompletedTopics((prev) => new Set(prev).add(topicId))
+        setQuizStatus((prev) => ({
+          ...prev,
+          passed: new Set(prev.passed).add(lessonKey(moduleIndex, topicIndex)),
+          bonusPaid: prev.bonusPaid || bonus > 0,
+        }))
+        if (topicAward > 0) showPointsPop(topicAward)
+        if (bonus > 0) setRoadmapBonus(bonus)
+      }
+    } catch (error) {
+      setQuizError(error instanceof Error ? error.message : "Couldn't mark the quiz. Please try again.")
+    } finally {
+      setIsSubmittingQuiz(false)
+    }
   }
 
   const allQuestionsAnswered =
-    quizData?.questions?.length > 0 && Object.keys(selectedAnswers).length === quizData.questions.length
+    (quizData?.questions.length ?? 0) > 0 && Object.keys(selectedAnswers).length === quizData?.questions.length
+
+  const quizResultMessage = (() => {
+    if (!quizResult) return ""
+    if (!quizResult.passed) return "Not quite. Review the lesson and try a new quiz; each one has fresh questions."
+    switch (quizResult.award?.reason) {
+      case "paid":
+        return `+${quizResult.award.topic} points! Lesson ticked.`
+      case "already_paid":
+        return "Lesson ticked. You'd already earned its points."
+      case "daily_limit":
+        return `Lesson ticked, but no points: you've reached today's limit of ${DAILY_PAID_LESSONS} paid lessons. Pass it again tomorrow to earn them.`
+      default:
+        return "Passed, but the points couldn't be saved. Please try again later."
+    }
+  })()
+
+  const verifyLessons = roadmap.modules.flatMap((m, mi) =>
+    m.topics.map((t, ti) => ({ key: lessonKey(mi, ti), title: t.title, moduleTitle: m.title, passed: quizStatus.passed.has(lessonKey(mi, ti)) })),
+  )
+  const quizzesPassed = verifyLessons.filter((l) => l.passed).length
 
   if (showVisualRoadmap) {
     return (
@@ -429,6 +527,18 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
           </Button>
         </div>
 
+        <button
+          type="button"
+          onClick={() => setShowVerify(true)}
+          className="flex w-full items-center gap-2 border-b bg-background px-4 py-2.5 text-left text-sm transition-colors hover:bg-brand-soft/50"
+        >
+          <ShieldCheck className="h-4 w-4 shrink-0 text-brand-ink" />
+          <span className="flex-1 font-semibold">
+            {quizStatus.bonusPaid ? "Roadmap verified" : `Quizzes passed: ${quizzesPassed}/${totalTopics}`}
+          </span>
+          <span className="text-xs font-bold text-primary underline">{quizStatus.bonusPaid ? "View" : "Bonus checklist"}</span>
+        </button>
+
         <div className="flex-1 overflow-y-auto">
           {roadmap.modules.map((module, moduleIndex) => {
             const isExpanded = expandedModules.has(module.id)
@@ -484,7 +594,10 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
                               <Circle className="h-5 w-5 text-muted-foreground" />
                             )}
                           </div>
-                          <span className={cn("text-sm", isCompleted && "text-muted-foreground")}>{topic.title}</span>
+                          <span className={cn("flex-1 text-sm", isCompleted && "text-muted-foreground")}>{topic.title}</span>
+                          {quizStatus.passed.has(lessonKey(moduleIndex, topicIndex)) && (
+                            <Star className="mt-0.5 h-4 w-4 shrink-0 fill-marigold text-marigold-ink" aria-label="Quiz passed" />
+                          )}
                         </button>
                       )
                     })}
@@ -641,15 +754,27 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
 
               <Card>
                 <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div className="min-w-0">
                       <h3 className="mb-2 text-lg font-semibold">Test Your Knowledge</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Take a quiz to reinforce what you&apos;ve learned in this lesson
-                      </p>
+                      {quizStatus.passed.has(lessonKey(selectedTopic.moduleIndex, selectedTopic.topicIndex)) ? (
+                        <p className="flex items-center gap-1.5 text-sm font-semibold text-leaf-ink">
+                          <CheckCircle2 className="h-4 w-4" /> Quiz passed. Retake it any time to practise.
+                        </p>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">
+                          Pass with {quizPassMark(4)} of 4 to earn {POINTS_PER_LESSON} points and tick this lesson. The quiz unlocks{" "}
+                          {QUIZ_UNLOCK_MINUTES} minutes after you open the lesson.
+                        </p>
+                      )}
+                      {!quizStatus.enabled && (
+                        <p className="mt-2 text-sm font-semibold text-coral-ink">
+                          Quizzes are off until the site owner adds the server&apos;s secret key.
+                        </p>
+                      )}
                     </div>
-                    <Button onClick={handleGenerateQuiz} disabled={isLoadingQuiz}>
-                      {isLoadingQuiz ? "Generating..." : "Take a Quiz"}
+                    <Button onClick={handleGenerateQuiz} disabled={isLoadingQuiz} className="shrink-0">
+                      {isLoadingQuiz ? "Generating..." : "Take the quiz"}
                     </Button>
                   </div>
                 </CardContent>
@@ -851,11 +976,11 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
       )}
 
       {showQuiz && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-          <Card className="w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-sm">
+          <Card className="flex max-h-[85vh] w-full max-w-2xl flex-col overflow-hidden">
             <div className="flex items-center justify-between border-b p-6">
               <h2 className="font-serif text-2xl font-bold">Quiz: {currentTopic?.title}</h2>
-              <Button variant="ghost" size="sm" onClick={() => setShowQuiz(false)}>
+              <Button variant="ghost" size="sm" onClick={() => setShowQuiz(false)} aria-label="Close quiz">
                 <X className="h-4 w-4" />
               </Button>
             </div>
@@ -868,91 +993,110 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
                     <p className="text-sm text-muted-foreground">Generating quiz questions...</p>
                   </div>
                 </div>
-              ) : quizError ? (
+              ) : quizError && !quizData ? (
                 <div className="flex h-64 flex-col items-center justify-center gap-4 text-center">
                   <p className="max-w-sm font-semibold text-ink">{quizError}</p>
                   <Button onClick={handleGenerateQuiz}>Try again</Button>
                 </div>
               ) : quizData ? (
                 <div className="space-y-6">
-                  {quizData.questions.map((question: any, qIndex: number) => (
-                    <div key={qIndex} className="space-y-3">
-                      <h3 className="font-semibold">
-                        {qIndex + 1}. {question.question}
-                      </h3>
-                      <div className="space-y-2">
-                        {question.options.map((option: string, oIndex: number) => {
-                          const isSelected = selectedAnswers[qIndex] === oIndex
-                          const isCorrect = question.correctAnswer === oIndex
-                          const showResult = quizSubmitted
+                  {!quizSubmitted && (quizData.alreadyPaid || quizData.dailyLimitReached) && (
+                    <p className="rounded-lg border-2 border-ink bg-marigold-soft px-3 py-2 text-sm text-ink">
+                      {quizData.alreadyPaid
+                        ? "You've already earned this lesson's points, so this one is for practice."
+                        : `You've earned points for ${DAILY_PAID_LESSONS} lessons today. Passing still ticks the lesson; points resume tomorrow.`}
+                    </p>
+                  )}
+                  {quizData.questions.map((question, qIndex) => {
+                    const result = quizResult?.results[qIndex]
+                    return (
+                      <div key={qIndex} className="space-y-3" data-quiz-question={qIndex}>
+                        <h3 className="font-semibold">
+                          {qIndex + 1}. {question.question}
+                        </h3>
+                        <div className="space-y-2">
+                          {question.options.map((option, oIndex) => {
+                            const isSelected = selectedAnswers[qIndex] === oIndex
+                            const isCorrect = result?.correctAnswer === oIndex
+                            const showResult = quizSubmitted
 
-                          return (
-                            <button
-                              key={oIndex}
-                              onClick={() => handleAnswerSelect(qIndex, oIndex)}
-                              disabled={quizSubmitted}
-                              className={cn(
-                                "flex w-full items-center gap-3 rounded-lg border p-4 text-left transition-colors",
-                                !showResult && "hover:bg-muted/50",
-                                isSelected && !showResult && "border-primary bg-primary/5",
-                                showResult && isCorrect && "border-leaf bg-leaf-soft",
-                                showResult && isSelected && !isCorrect && "border-coral bg-coral-soft",
-                                quizSubmitted && "cursor-default",
-                              )}
-                            >
-                              <div
+                            return (
+                              <button
+                                key={oIndex}
+                                onClick={() => handleAnswerSelect(qIndex, oIndex)}
+                                disabled={quizSubmitted || isSubmittingQuiz}
                                 className={cn(
-                                  "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2",
-                                  isSelected && !showResult && "border-primary bg-primary",
-                                  showResult && isCorrect && "border-leaf bg-leaf",
-                                  showResult && isSelected && !isCorrect && "border-coral bg-coral",
+                                  "flex w-full items-center gap-3 rounded-lg border p-4 text-left transition-colors",
+                                  !showResult && "hover:bg-muted/50",
+                                  isSelected && !showResult && "border-primary bg-primary/5",
+                                  showResult && isCorrect && "border-leaf bg-leaf-soft",
+                                  showResult && isSelected && !isCorrect && "border-coral bg-coral-soft",
+                                  quizSubmitted && "cursor-default",
                                 )}
                               >
-                                {isSelected && <div className="h-2 w-2 rounded-full bg-white"></div>}
-                              </div>
-                              <span className="flex-1">{option}</span>
-                            </button>
-                          )
-                        })}
-                      </div>
-                      {quizSubmitted && question.explanation && (
-                        <div className="rounded-lg bg-muted p-3 text-sm">
-                          <p className="font-semibold mb-1">Explanation:</p>
-                          <p className="text-muted-foreground">{question.explanation}</p>
+                                <div
+                                  className={cn(
+                                    "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2",
+                                    isSelected && !showResult && "border-primary bg-primary",
+                                    showResult && isCorrect && "border-leaf bg-leaf",
+                                    showResult && isSelected && !isCorrect && "border-coral bg-coral",
+                                  )}
+                                >
+                                  {isSelected && <div className="h-2 w-2 rounded-full bg-white"></div>}
+                                </div>
+                                <span className="flex-1">{option}</span>
+                              </button>
+                            )
+                          })}
                         </div>
-                      )}
-                    </div>
-                  ))}
+                        {result?.explanation && (
+                          <div className="rounded-lg bg-muted p-3 text-sm">
+                            <p className="mb-1 font-semibold">Explanation:</p>
+                            <p className="text-muted-foreground">{result.explanation}</p>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
               ) : null}
             </div>
 
             <div className="border-t p-6">
+              {quizError && quizData && (
+                <p role="alert" className="mb-3 rounded-lg border-2 border-ink bg-coral-soft px-3 py-2 text-sm font-semibold text-ink">
+                  {quizError}
+                </p>
+              )}
               {!quizSubmitted ? (
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-3">
                   <p className="text-sm text-muted-foreground">
                     {allQuestionsAnswered
-                      ? "All questions answered"
-                      : `Answer all questions to submit (${Object.keys(selectedAnswers).length}/${quizData?.questions?.length || 0})`}
+                      ? `All questions answered. You need ${quizData?.passMark ?? 0} right to pass.`
+                      : `Answer all questions to submit (${Object.keys(selectedAnswers).length}/${quizData?.questions.length || 0})`}
                   </p>
-                  <Button onClick={handleSubmitQuiz} disabled={!allQuestionsAnswered}>
+                  <Button onClick={handleSubmitQuiz} disabled={!allQuestionsAnswered || isSubmittingQuiz}>
+                    {isSubmittingQuiz && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Submit Quiz
                   </Button>
                 </div>
               ) : (
-                <div className="flex items-center justify-between">
-                  <div>
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="min-w-0">
                     <p className="font-semibold">
-                      Score:{" "}
-                      {
-                        Object.entries(selectedAnswers).filter(
-                          ([qIndex, aIndex]) => quizData.questions[Number.parseInt(qIndex)].correctAnswer === aIndex,
-                        ).length
-                      }{" "}
-                      / {quizData.questions.length}
+                      Score: {quizResult.score} / {quizResult.total}
+                      {quizResult.passed ? " · Passed" : ` · You need ${quizResult.passMark}`}
                     </p>
+                    <p className="text-sm text-muted-foreground">{quizResultMessage}</p>
                   </div>
-                  <Button onClick={() => setShowQuiz(false)}>Close</Button>
+                  <div className="flex gap-2">
+                    {!quizResult.passed && (
+                      <Button variant="outline" onClick={handleGenerateQuiz}>
+                        New quiz
+                      </Button>
+                    )}
+                    <Button onClick={() => setShowQuiz(false)}>Close</Button>
+                  </div>
                 </div>
               )}
             </div>
@@ -960,8 +1104,8 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
         </div>
       )}
 
-      {/* Points feedback, bottom-right on desktop and full-width at the bottom on phones. */}
-      <div className="pointer-events-none fixed inset-x-4 bottom-4 z-40 flex flex-col items-end gap-3 sm:inset-x-auto sm:right-6 sm:w-96">
+      {/* Points feedback, bottom-right on desktop and full-width at the bottom on phones; above the quiz panel. */}
+      <div className="pointer-events-none fixed inset-x-4 bottom-4 z-[60] flex flex-col items-end gap-3 sm:inset-x-auto sm:right-6 sm:w-96">
         {pointsPop && (
           <div
             key={pointsPop.id}
@@ -980,6 +1124,36 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
             </button>
           </div>
         )}
+        {finishPrompt && !quizStatus.bonusPaid && roadmapBonus === null && (
+          <div role="status" className="rise-in pointer-events-auto w-full rounded-2xl border-2 border-ink bg-marigold-soft p-5 shadow-lift">
+            <div className="flex items-start gap-3">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-ink bg-marigold">
+                <ShieldCheck className="h-5 w-5 text-ink" />
+              </span>
+              <div className="flex-1">
+                <p className="font-display text-lg font-extrabold text-ink">Every lesson ticked!</p>
+                <p className="text-sm text-ink/75">
+                  Pass each lesson&apos;s quiz ({quizzesPassed} of {totalTopics} so far) and write a short recap to earn the{" "}
+                  <strong className="text-ink">+{bonusForLessons(totalTopics)} bonus</strong> and a certificate.
+                </p>
+              </div>
+              <button type="button" onClick={() => setFinishPrompt(false)} aria-label="Dismiss" className="text-ink/60 hover:text-ink">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="mt-4">
+              <Button
+                size="sm"
+                onClick={() => {
+                  setFinishPrompt(false)
+                  setShowVerify(true)
+                }}
+              >
+                Open checklist
+              </Button>
+            </div>
+          </div>
+        )}
         {roadmapBonus !== null && (
           <div role="status" className="rise-in pointer-events-auto w-full rounded-2xl border-2 border-ink bg-leaf-soft p-5 shadow-lift">
             <div className="flex items-start gap-3">
@@ -987,9 +1161,9 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
                 <PartyPopper className="h-5 w-5 text-ink" />
               </span>
               <div className="flex-1">
-                <p className="font-display text-lg font-extrabold text-ink">Roadmap finished!</p>
+                <p className="font-display text-lg font-extrabold text-ink">Roadmap verified!</p>
                 <p className="text-sm text-ink/75">
-                  You earned a <strong className="text-ink">+{roadmapBonus} point</strong> bonus for completing every lesson.
+                  You earned a <strong className="text-ink">+{roadmapBonus} point</strong> bonus for passing every quiz and your recap.
                 </p>
               </div>
               <button type="button" onClick={() => setRoadmapBonus(null)} aria-label="Dismiss" className="text-ink/60 hover:text-ink">
@@ -1007,6 +1181,20 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
           </div>
         )}
       </div>
+
+      <RoadmapVerifyDialog
+        open={showVerify}
+        onOpenChange={setShowVerify}
+        roadmapId={roadmapId}
+        lessons={verifyLessons}
+        recapApproved={quizStatus.recapApproved}
+        bonusPaid={quizStatus.bonusPaid}
+        bonusAmount={bonusForLessons(totalTopics)}
+        onApproved={(bonus) => {
+          setQuizStatus((prev) => ({ ...prev, recapApproved: true, bonusPaid: prev.bonusPaid || bonus > 0 }))
+          if (bonus > 0) setRoadmapBonus(bonus)
+        }}
+      />
     </div>
   )
 }

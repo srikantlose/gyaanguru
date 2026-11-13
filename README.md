@@ -31,7 +31,7 @@ It's one Next.js app, with Supabase for accounts and data and Google Gemini for 
 - See the whole roadmap as a map of connected modules and lessons.
 
 **Track and earn**
-- Every new lesson you finish earns 5 points, and finishing a whole roadmap earns a bonus. Keep a daily streak and collect badges.
+- Pass a lesson's quiz to earn 5 points. Prove you learned a whole roadmap (every quiz passed, plus a short recap the AI checks) for a bonus. Keep a daily streak and collect badges.
 - Spend points on the rewards page: a Streak Freeze for a busy day, a printable completion certificate, or a sticker pack for your dashboard.
 - Your dashboard shows progress for every roadmap.
 
@@ -59,7 +59,7 @@ It's one Next.js app, with Supabase for accounts and data and Google Gemini for 
   <img src="docs/architecture.svg" alt="Diagram: the browser calls the Next.js server's API routes; the server talks to Supabase, Gemini, YouTube and Adzuna; sign-in goes straight from the browser to Supabase Auth" width="100%">
 </p>
 
-The browser never holds a secret. Signing up, logging in and resetting a password go straight to Supabase Auth with the publishable key. Everything else goes through the app's own `/api` routes. They check your session, read and write your data as you (so the database's row-level security applies), and are the only place the Gemini, YouTube and Adzuna keys are used.
+The browser never holds a secret. Signing up, logging in and resetting a password go straight to Supabase Auth with the publishable key. Everything else goes through the app's own `/api` routes. They check your session, read and write your data as you (so the database's row-level security applies), and are the only place the Gemini, YouTube and Adzuna keys and the Supabase secret key are used.
 
 ### What happens when you generate a roadmap
 
@@ -101,7 +101,7 @@ The screens show that message with a **Try again** button instead of failing sil
 
 ### Data
 
-Six tables in Supabase, all protected by row-level security so people only ever see their own rows:
+Six main tables in Supabase, all protected by row-level security so people only ever see their own rows. Three more (`lesson_quizzes`, `lesson_views`, `roadmap_recaps`) hold quiz answers and the proof-of-learning trail. Only the server can read or write them.
 
 ```mermaid
 erDiagram
@@ -156,16 +156,23 @@ Badges, streaks and hours learned aren't stored. They're worked out each time (`
 
 ### Points & rewards
 
-Points can't be changed from the browser. Ticking a lesson, unticking it and redeeming a reward each go through one database function (`complete_topic`, `uncomplete_topic`, `redeem_reward` in [`scripts/schema.sql`](scripts/schema.sql)). Each function works out the amount itself, checks the lesson really exists, and records the change in `point_events`, so your balance always matches your points history.
+Ticking a lesson off tracks your progress, but it doesn't earn points. Anyone can click a button. Points come from showing you learned something:
 
 | You... | Points |
 |---|---|
-| finish a lesson for the first time | +5 |
-| finish every lesson in a roadmap | +60 to +320 (8 per lesson, at least 60) |
-| untick a lesson and tick it again | nothing more; points you earned stay |
+| pass a lesson's quiz (3 of 4 right) | +5, once per lesson |
+| verify a roadmap: pass every lesson's quiz, then write a short recap the AI approves | +60 to +320 (8 per lesson, at least 60) |
+| tick, untick or re-tick a lesson | nothing |
 | redeem a reward | its cost |
 
-The rewards page has three perks that do something: a **Streak Freeze** that covers one missed day, a **Completion Certificate** you can print for a finished roadmap, and a **Sticker Pack** for your dashboard. There are also six **demo rewards** (vouchers and the like) that show how a real store could work. They take the points but deliver nothing, and the page says so.
+How that's kept honest:
+
+- **Quizzes are marked on the server.** The browser gets the questions but never the answers, which are stored where learners can't read them. Every retry is a new quiz with fresh questions.
+- **No speed-running.** A lesson's quiz unlocks 3 minutes after you first open it, and at most 15 lessons a day earn points.
+- **The recap is read by Gemini.** It has to explain at least two specific things from the lessons in your own words; a list of lesson titles won't pass.
+- **Points can't be changed from the browser.** Every change goes through a database function in [`scripts/schema.sql`](scripts/schema.sql) and is recorded in `point_events`, so your balance always matches your points history. Paying for a passed quiz needs the server's secret key, so it can't be faked with the public one.
+
+The rewards page has three perks that do something: a **Streak Freeze** that covers one missed day, a **Completion Certificate** you can print for a verified roadmap, and a **Sticker Pack** for your dashboard. There are also six **demo rewards** (vouchers and the like) that show how a real store could work. They take the points but deliver nothing, and the page says so.
 
 <table>
   <tr>
@@ -214,6 +221,7 @@ The rewards page has three perks that do something: a **Streak Freeze** that cov
    |---|---|---|
    | `NEXT_PUBLIC_SUPABASE_URL` | yes | Project URL, e.g. `https://abcd.supabase.co` |
    | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | yes | The publishable (anon) key. Never the secret key. |
+   | `SUPABASE_SECRET_KEY` | for points | The secret key (Supabase **Project Settings → API Keys**). Used only on the server, to mark quizzes and pay points. Without it, quizzes are switched off. |
    | `GEMINI_API_KEY` | yes | Roadmaps, notes, quizzes, mentor and career tools |
    | `YOUTUBE_API_KEY` | optional | Lesson videos. Without it, lessons show a short note instead. |
    | `ADZUNA_APP_ID`, `ADZUNA_APP_KEY` | optional | Live jobs. Without them, the jobs page shows sample listings. |
@@ -249,6 +257,7 @@ app/
   api/                     route handlers (all AI, data and third-party calls)
 components/
   roadmap-visualization.tsx   the lesson view: outline, notes, quiz, instructor, videos
+  roadmap-verify.tsx          the bonus checklist: quiz status and the recap
   mentor-client.tsx           AI Mentor
   rewards-client.tsx          points, perks, badges and points history
   illustrations.tsx  doodles.tsx  page-header.tsx   the notebook look
@@ -256,7 +265,7 @@ components/
 lib/
   gemini.ts       Gemini client with retries and model fallback
   learner.ts      one snapshot of a learner's progress, used to ground the AI
-  nsqf.ts  nsqf-path.ts  achievements.ts  rewards.ts
+  nsqf.ts  nsqf-path.ts  achievements.ts  rewards.ts  quiz.ts
 scripts/schema.sql   the whole database, idempotent
 data/                NSQF reference data (levels, roles, courses)
 ```
