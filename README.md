@@ -30,8 +30,9 @@ It's one Next.js app, with Supabase for accounts and data and Google Gemini for 
 - Watch YouTube lectures picked for the topic.
 - See the whole roadmap as a map of connected modules and lessons.
 
-**Track**
-- Tick off lessons to earn 5 points each, keep a daily streak and collect badges.
+**Track and earn**
+- Every new lesson you finish earns 5 points, and finishing a whole roadmap earns a bonus. Keep a daily streak and collect badges.
+- Spend points on the rewards page: a Streak Freeze for a busy day, a printable completion certificate, or a sticker pack for your dashboard.
 - Your dashboard shows progress for every roadmap.
 
 **Get guidance**
@@ -100,13 +101,16 @@ The screens show that message with a **Try again** button instead of failing sil
 
 ### Data
 
-Three tables in Supabase, all protected by row-level security so people only ever see their own rows:
+Six tables in Supabase, all protected by row-level security so people only ever see their own rows:
 
 ```mermaid
 erDiagram
     AUTH_USERS ||--|| PROFILES : has
     AUTH_USERS ||--o{ ROADMAPS : creates
     ROADMAPS ||--o{ PROGRESS : tracks
+    AUTH_USERS ||--o{ POINT_EVENTS : earns
+    AUTH_USERS ||--o{ REWARD_REDEMPTIONS : redeems
+    REWARD_CATALOG ||--o{ REWARD_REDEMPTIONS : "is redeemed as"
     PROFILES {
         uuid id PK
         text full_name
@@ -128,9 +132,51 @@ erDiagram
         int topic_index
         timestamptz completed_at
     }
+    POINT_EVENTS {
+        uuid user_id FK
+        int amount
+        text kind
+        text ref
+    }
+    REWARD_CATALOG {
+        text id PK
+        text name
+        int cost
+        text kind
+    }
+    REWARD_REDEMPTIONS {
+        uuid user_id FK
+        text reward_id FK
+        uuid target_id
+        text status
+    }
 ```
 
-Badges, streaks and hours learned aren't stored. They're worked out from `progress` each time (`lib/learner.ts`, `lib/achievements.ts`). Points change through one SQL function, `adjust_points()`, so double-clicking a lesson can't award them twice.
+Badges, streaks and hours learned aren't stored. They're worked out each time (`lib/learner.ts`, `lib/achievements.ts`).
+
+### Points & rewards
+
+Points can't be changed from the browser. Ticking a lesson, unticking it and redeeming a reward each go through one database function (`complete_topic`, `uncomplete_topic`, `redeem_reward` in [`scripts/schema.sql`](scripts/schema.sql)). Each function works out the amount itself, checks the lesson really exists, and records the change in `point_events`, so your balance always matches your points history.
+
+| You... | Points |
+|---|---|
+| finish a lesson for the first time | +5 |
+| finish every lesson in a roadmap | +60 to +320 (8 per lesson, at least 60) |
+| untick a lesson and tick it again | nothing more; points you earned stay |
+| redeem a reward | its cost |
+
+The rewards page has three perks that do something: a **Streak Freeze** that covers one missed day, a **Completion Certificate** you can print for a finished roadmap, and a **Sticker Pack** for your dashboard. There are also six **demo rewards** (vouchers and the like) that show how a real store could work. They take the points but deliver nothing, and the page says so.
+
+<table>
+  <tr>
+    <td width="58%"><img src="docs/screenshots/rewards.jpg" alt="Rewards page: balance, earned, spent and roadmaps-finished tiles, then coupon-style cards for Streak Freeze, Completion Certificate and Sticker Pack"></td>
+    <td width="42%"><img src="docs/screenshots/certificate.jpg" alt="A printable completion certificate for the roadmap 'Python for Data Analysis', with NSQF level, lessons, study hours and a rubber stamp"></td>
+  </tr>
+  <tr>
+    <td><sub>The rewards page. Perks unlock as soon as you redeem them.</sub></td>
+    <td><sub>A completion certificate, ready to print or save as PDF.</sub></td>
+  </tr>
+</table>
 
 ## Running it locally
 
@@ -152,7 +198,7 @@ Badges, streaks and hours learned aren't stored. They're worked out from `progre
    ```
 
 2. **Set up Supabase**
-   - In your project's **SQL Editor**, paste all of [`scripts/schema.sql`](scripts/schema.sql) and run it. It creates the tables, security rules and sign-up trigger, and it's safe to run again.
+   - In your project's **SQL Editor**, paste all of [`scripts/schema.sql`](scripts/schema.sql) and run it. It creates the tables, security rules, sign-up trigger and points functions, and it's safe to run again. Run it again after pulling a version that changes it; existing points carry over.
    - Under **Authentication → Sign In / Providers → Email**, turn off **Confirm email** while you're developing, so new accounts work straight away.
    - Under **Authentication → URL Configuration**, set the Site URL to `http://localhost:3000` and add `http://localhost:3000/**` to Redirect URLs. Password-reset links need this.
 
@@ -198,17 +244,19 @@ Badges, streaks and hours learned aren't stored. They're worked out from `progre
 app/
   page.tsx                 home page
   dashboard/  generate/  roadmap/[id]/  ai-mentor/  career-guidance/  jobs/  nsqf/demo/
+  rewards/  certificate/[roadmapId]/
   auth/                    login, sign-up, forgot and reset password
   api/                     route handlers (all AI, data and third-party calls)
 components/
   roadmap-visualization.tsx   the lesson view: outline, notes, quiz, instructor, videos
   mentor-client.tsx           AI Mentor
+  rewards-client.tsx          points, perks, badges and points history
   illustrations.tsx  doodles.tsx  page-header.tsx   the notebook look
   ui/                         buttons, cards, inputs (shadcn/ui, restyled)
 lib/
   gemini.ts       Gemini client with retries and model fallback
   learner.ts      one snapshot of a learner's progress, used to ground the AI
-  nsqf.ts  nsqf-path.ts  achievements.ts
+  nsqf.ts  nsqf-path.ts  achievements.ts  rewards.ts
 scripts/schema.sql   the whole database, idempotent
 data/                NSQF reference data (levels, roles, courses)
 ```

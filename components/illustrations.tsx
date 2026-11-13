@@ -303,6 +303,32 @@ export function GrowthIllustration(props: IllustrationProps) {
   )
 }
 
+/** Gift box with a ribbon, a stack of point coins and a star: the rewards page. */
+export function RewardsIllustration(props: IllustrationProps) {
+  return (
+    <Svg viewBox="0 0 240 200" {...props}>
+      <circle cx="120" cy="104" r="84" fill="var(--color-bubblegum-soft)" />
+      <g className="float-slow">
+        <path d="M40 52 l6 13 14 2 -10 10 3 14 -13 -7 -12 7 2 -14 -10 -10 14 -2z" fill={C.leaf} />
+      </g>
+      <rect x="66" y="96" width="104" height="74" rx="6" fill={C.coral} />
+      <rect x="58" y="78" width="120" height="26" rx="6" fill={C.coral} />
+      <rect x="108" y="78" width="20" height="92" fill={C.marigold} />
+      <path d="M118 78 C 100 52, 76 58, 86 74 C 92 82, 108 80, 118 78" fill={C.marigold} />
+      <path d="M118 78 C 136 52, 160 58, 150 74 C 144 82, 128 80, 118 78" fill={C.marigold} />
+      <g className="float">
+        <ellipse cx="196" cy="150" rx="24" ry="9" fill={C.marigold} />
+        <ellipse cx="196" cy="138" rx="24" ry="9" fill={C.marigold} />
+        <ellipse cx="196" cy="126" rx="24" ry="9" fill={C.marigoldSoft} />
+        <text x="196" y="131" textAnchor="middle" fontSize="12" fontWeight="900" fill={C.ink} stroke="none">
+          +5
+        </text>
+      </g>
+      <path d="M26 176 h188" strokeOpacity="0.25" />
+    </Svg>
+  )
+}
+
 /** Small scene illustrations for feature cards. */
 export function SpotIllustration({ kind, className }: { kind: "roadmap" | "nsqf" | "lessons" | "progress" | "jobs" | "guidance"; className?: string }) {
   switch (kind) {

@@ -22,7 +22,7 @@ const columns = [
 
 export function SiteFooter() {
   return (
-    <footer className="mt-16 bg-ink text-white/80">
+    <footer className="mt-16 bg-ink text-white/80 print:hidden">
       {/* color strip */}
       <div className="flex h-1.5" aria-hidden>
         <span className="flex-1 bg-brand" />

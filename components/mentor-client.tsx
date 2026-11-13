@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useRef, useState } from "react"
-import { ArrowRight, Award, BookOpen, Check, Clock, Flame, Loader2, Send, Star, Target } from "lucide-react"
+import { ArrowRight, Award, BookOpen, Check, Clock, Flame, Loader2, Send, Snowflake, Star, Target } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -301,11 +301,15 @@ export function MentorClient({ learner, achievements }: { learner: LearnerSnapsh
                 <div className="mt-5 flex h-44 items-end gap-3">
                   {learner.week.map((d) => (
                     <div key={d.date} className="flex flex-1 flex-col items-center gap-2">
-                      <span className="text-xs font-bold text-ink">{d.count}</span>
+                      {d.frozen ? (
+                        <Snowflake className="h-4 w-4 text-lagoon-ink" aria-label="Streak Freeze used" />
+                      ) : (
+                        <span className="text-xs font-bold text-ink">{d.count}</span>
+                      )}
                       <div
                         className="w-full rounded-t-lg border-2 border-ink bg-brand"
                         style={{ height: `${Math.max(6, (d.count / maxDay) * 100)}%`, opacity: d.count ? 1 : 0.25 }}
-                        title={`${d.count} lesson${d.count === 1 ? "" : "s"} on ${d.date}`}
+                        title={d.frozen ? `Streak Freeze used on ${d.date}` : `${d.count} lesson${d.count === 1 ? "" : "s"} on ${d.date}`}
                       />
                       <span className="text-xs font-semibold text-ink/70">{d.label}</span>
                     </div>
@@ -313,6 +317,8 @@ export function MentorClient({ learner, achievements }: { learner: LearnerSnapsh
                 </div>
                 <p className="mt-4 text-sm text-ink/70">
                   Active on {learner.activeDays} day{learner.activeDays === 1 ? "" : "s"} so far.
+                  {learner.freezesAvailable > 0 &&
+                    ` ${learner.freezesAvailable} Streak Freeze${learner.freezesAvailable === 1 ? "" : "s"} saved for a busy day.`}
                 </p>
               </div>
               <div className="rounded-2xl border-2 border-ink bg-card p-5 shadow-brut">

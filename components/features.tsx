@@ -1,3 +1,5 @@
+import Link from "next/link"
+import { ArrowRight } from "lucide-react"
 import { SpotlightCard } from "@/components/spotlight-card"
 import { SpotIllustration } from "@/components/illustrations"
 import { HandNote, ScribbleCircle } from "@/components/doodles"
@@ -22,6 +24,8 @@ const notes: {
   tilt: number
   art: "roadmap" | "nsqf" | "lessons" | "progress" | "jobs" | "guidance"
   scribble: string
+  href: string
+  cta: string
 }[] = [
   {
     title: "A roadmap that fits your week",
@@ -31,6 +35,8 @@ const notes: {
     tilt: -2,
     art: "roadmap",
     scribble: "plan",
+    href: "/generate",
+    cta: "Make a roadmap",
   },
   {
     title: "Mapped to NSQF levels",
@@ -40,6 +46,8 @@ const notes: {
     tilt: 1.5,
     art: "nsqf",
     scribble: "level",
+    href: "/nsqf/demo",
+    cta: "Try the NSQF demo",
   },
   {
     title: "Lessons, quizzes & a tutor",
@@ -49,15 +57,19 @@ const notes: {
     tilt: -1,
     art: "lessons",
     scribble: "learn",
+    href: "/dashboard",
+    cta: "Open your lessons",
   },
   {
-    title: "Progress you can see",
-    description: "Tick off lessons, earn points and watch each module fill up on your dashboard.",
+    title: "Points, badges & rewards",
+    description: "Every lesson earns points and finishing a roadmap pays a bonus. Collect badges, then spend points on streak freezes, certificates and more.",
     tone: "lagoon",
     tape: "leaf",
     tilt: 2,
     art: "progress",
     scribble: "track",
+    href: "/rewards",
+    cta: "See rewards",
   },
   {
     title: "Live job matches",
@@ -67,6 +79,8 @@ const notes: {
     tilt: -1.5,
     art: "jobs",
     scribble: "apply",
+    href: "/jobs",
+    cta: "Browse jobs",
   },
   {
     title: "Career guidance on tap",
@@ -76,6 +90,8 @@ const notes: {
     tilt: 1,
     art: "guidance",
     scribble: "ask",
+    href: "/career-guidance",
+    cta: "Get guidance",
   },
 ]
 
@@ -107,6 +123,13 @@ export function Features() {
               </div>
               <h3 className="mt-4 text-2xl leading-tight text-ink">{n.title}</h3>
               <p className="mt-2 leading-relaxed text-ink/75">{n.description}</p>
+              <Link
+                href={n.href}
+                className="mt-auto inline-flex w-fit items-center gap-1.5 pt-5 font-bold text-ink underline decoration-2 underline-offset-4 hover:decoration-coral"
+              >
+                {n.cta}
+                <ArrowRight className="h-4 w-4" />
+              </Link>
             </div>
           </SpotlightCard>
         ))}

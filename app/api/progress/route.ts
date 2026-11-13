@@ -1,23 +1,19 @@
 import { NextResponse } from "next/server"
+import { z } from "zod"
 import { createClient } from "@/lib/supabase/server"
+import { SCHEMA_MISSING_MESSAGE, isSchemaMissing, rewardErrorResponse } from "@/lib/rewards"
 
-const POINTS_PER_TOPIC = 5
+const ProgressSchema = z.object({
+  roadmapId: z.uuid(),
+  moduleIndex: z.number().int().min(0),
+  topicIndex: z.number().int().min(0),
+  completed: z.boolean(),
+})
 
-type SupabaseClient = Awaited<ReturnType<typeof createClient>>
-
-// Atomic increment/decrement (clamped at 0) via the adjust_points SQL function in scripts/schema.sql.
-async function adjustPoints(supabase: SupabaseClient, delta: number) {
-  const { error } = await supabase.rpc("adjust_points", { delta })
-  if (error) {
-    // Progress is already saved; a failed points update shouldn't fail the request.
-    console.error("Error adjusting points:", error)
-  }
-}
+type ProgressResult = { points: number; topic_award: number; bonus_award: number; finished: boolean }
 
 export async function POST(request: Request) {
   try {
-    const { roadmapId, moduleIndex, topicIndex, completed } = await request.json()
-
     const supabase = await createClient()
     const {
       data: { user },
@@ -27,59 +23,36 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    if (completed) {
-      // ignoreDuplicates + select returns only rows that were actually inserted, so repeated or
-      // concurrent "complete" clicks award points once.
-      const { data: inserted, error } = await supabase
-        .from("progress")
-        .upsert(
-          {
-            user_id: user.id,
-            roadmap_id: roadmapId,
-            module_index: moduleIndex,
-            topic_index: topicIndex,
-            completed: true,
-            completed_at: new Date().toISOString(),
-          },
-          {
-            onConflict: "user_id,roadmap_id,module_index,topic_index",
-            ignoreDuplicates: true,
-          },
-        )
-        .select("id")
+    const parsed = ProgressSchema.safeParse(await request.json().catch(() => null))
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Invalid progress update" }, { status: 400 })
+    }
+    const { roadmapId, moduleIndex, topicIndex, completed } = parsed.data
 
-      if (error) {
-        console.error("Error saving progress:", error)
-        return NextResponse.json({ error: "Failed to save progress" }, { status: 500 })
-      }
+    // Ticking and points happen together in SQL (scripts/schema.sql): a lesson pays +5 once ever,
+    // and finishing every lesson pays the roadmap bonus once. Unticking never changes points.
+    const { data, error } = await supabase.rpc(completed ? "complete_topic" : "uncomplete_topic", {
+      p_roadmap_id: roadmapId,
+      p_module_index: moduleIndex,
+      p_topic_index: topicIndex,
+    })
 
-      if (inserted && inserted.length > 0) {
-        await adjustPoints(supabase, POINTS_PER_TOPIC)
+    if (error) {
+      if (isSchemaMissing(error)) {
+        return NextResponse.json({ error: SCHEMA_MISSING_MESSAGE, code: "SchemaNotMigrated" }, { status: 412 })
       }
-    } else {
-      // Mark as incomplete (delete the record); deduct only if a row was actually removed.
-      const { data: removed, error } = await supabase
-        .from("progress")
-        .delete()
-        .eq("user_id", user.id)
-        .eq("roadmap_id", roadmapId)
-        .eq("module_index", moduleIndex)
-        .eq("topic_index", topicIndex)
-        .select("id")
-
-      if (error) {
-        console.error("Error removing progress:", error)
-        return NextResponse.json({ error: "Failed to remove progress" }, { status: 500 })
-      }
-
-      if (removed && removed.length > 0) {
-        await adjustPoints(supabase, -POINTS_PER_TOPIC)
-      }
+      const mapped = rewardErrorResponse(error.message)
+      if (mapped.status === 500) console.error("Error updating progress:", error)
+      return NextResponse.json({ error: mapped.error }, { status: mapped.status })
     }
 
-    const { data: profileAfter } = await supabase.from("profiles").select("points").eq("id", user.id).single()
-
-    return NextResponse.json({ success: true, points: profileAfter?.points ?? 0 })
+    const result = data as ProgressResult
+    return NextResponse.json({
+      success: true,
+      points: result.points,
+      awarded: { topic: result.topic_award, bonus: result.bonus_award },
+      finished: result.finished,
+    })
   } catch (error) {
     console.error("Error updating progress:", error)
     return NextResponse.json({ error: "Failed to update progress" }, { status: 500 })

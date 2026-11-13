@@ -77,16 +77,45 @@ npm run lint         # eslint . (flat config in eslint.config.mjs; one file: npx
 - **`profiles`**: `id` (= `auth.users.id`), `full_name`, `points`, `onboarded`, `onboarded_at`, `onboarding_data` (jsonb).
   - A trigger on `auth.users` creates the row on sign-up.
   - The user's current NSQF level is stored inside `onboarding_data.current_nsqf_level`, not in its own column.
+  - Signed-in users may only `update` `email`, `full_name`, `onboarded`, `onboarded_at` and `onboarding_data` (column grants). **`points` is written only by the SQL functions below.** A new profile column that users must edit needs adding to that grant.
 - **`roadmaps`**: metadata columns plus `content` (jsonb), `nsqf_level`, `nsqf_description`.
   - `content` has the shape `{ title, description, modules: [{ id, title, topics: [{ id, title, description, estimatedHours }] }], nsqf? }`.
   - The dashboard, `RoadmapVisualization` and `VisualRoadmap` all assume this shape.
 - **`progress`**: one row per completed topic, keyed by **`(user_id, roadmap_id, module_index, topic_index)`**.
   - Rows are keyed by array position, not by topic `id`. Reordering a roadmap's modules or topics would orphan progress rows.
   - Un-completing a topic deletes its row.
-- **Points**: `/api/progress` gives ±5 per topic.
-  - The change goes through the `adjust_points(delta)` SQL function, which is atomic, clamps at 0 and only touches the caller's row.
-  - Points move only when the insert/delete actually changed a row (`ignoreDuplicates` + `.select()`), so repeated clicks don't double-award.
-- `/api/onboarding` returns `412 SchemaNotMigrated` when the onboarding columns are missing.
+  - Users can only read it. Rows are written by `complete_topic()` / `uncomplete_topic()`, which check that the lesson exists in the roadmap's `content`.
+- `/api/onboarding` returns `412 SchemaNotMigrated` when the onboarding columns are missing. `/api/progress` and `/api/rewards` do the same when the points tables or functions are missing.
+
+### Points and rewards
+- **The rules live in SQL** (`scripts/schema.sql`), so they can't be bypassed with the publishable key. All three functions are `security definer`, act on `auth.uid()`, and are executable by `authenticated` only:
+  - `complete_topic(roadmap, module, topic)`: ticks the lesson. Pays **+5 the first time that lesson is ever ticked**, and the roadmap bonus **`max(60, 8 × lessons)`, with lessons capped at 40** the first time every lesson is ticked. It locks the roadmap row, so two lessons finished at once pay the bonus exactly once.
+  - `uncomplete_topic(...)`: removes the tick only. Points already earned stay, and re-ticking pays nothing, so there's no farming.
+  - `redeem_reward(reward_id, target_id?)`: locks the profile row, checks the per-kind rules and the balance, then deducts. Concurrent redemptions can't overdraw.
+  - `adjust_points()` was removed: it let any signed-in user add any number of points.
+- **`point_events` is the ledger.** Every points change has a row (`topic`, `roadmap_bonus`, `redeem`, `adjust`), and `profiles.points` always equals the sum. Award rows are unique on `(user_id, kind, ref)`, which is what makes awards idempotent. The schema backfills a `topic` row per existing `progress` row plus an `adjust` "opening balance" row, so older balances carry over.
+- **`reward_catalog`** is seeded by the schema:
+  - `kind = 'perk'` items work in the app (`perk` column):
+    - `streak_freeze`: covers one missed day.
+    - `certificate`: once per finished roadmap, unlocks `/certificate/[roadmapId]`, which is printable.
+    - `sticker_pack`: once, adds draggable stickers on the dashboard.
+  - `kind = 'demo'` items (the six vouchers and packs) take the points and log a `requested` redemption, but nothing is delivered. The UI says so.
+  - `tone` is one of the pop colors.
+- **`reward_redemptions`**: perks are `active`, demo items are `requested`. Partial unique indexes back up the one-certificate-per-roadmap and one-sticker-pack rules.
+- **Read side:**
+  - `lib/rewards.ts` (`loadRewards`, error text for each SQL exception, `roadmapBonus()` for display).
+  - `lib/learner.ts` adds `pointsEarned`, `pointsSpent`, `roadmapsFinished` (finished now, or ever via a bonus row), `freezesAvailable`, `stickerPack`, `certificates` and `rewards`.
+- **Streaks:**
+  - Days are keyed in **`Asia/Kolkata`**.
+  - Activity comes from the first-tick time of each lesson, using its ledger row when there is one, so unticking doesn't erase history.
+  - `computeStreak()` assigns each Streak Freeze, in purchase order, to the first missed day on or after the day it was bought. A frozen day bridges the streak but doesn't add to it.
+- **Badges:** `lib/achievements.ts` (10 badges) uses `roadmapsFinished` and lifetime `pointsEarned`, so redeeming or unticking never takes a badge away.
+- **UI:**
+  - `/rewards`: `components/rewards-client.tsx`. It redeems through a confirm dialog, then calls `router.refresh()`.
+  - In the lesson view, `toggleTopic` rolls back on failure and shows the error, and shows a "+5" pop and a "Roadmap finished" card.
+  - The dashboard Points tile links to `/rewards`.
+  - The header has a Rewards link.
+- **Accepted gap:** users can still insert their own `roadmaps` rows with any `content`, so a determined user could make a fake roadmap and finish it for points. The 40-lesson cap limits each roadmap. If rewards ever have real value, roadmap writes must move server-side.
 
 ### AI routes (Gemini)
 - All Gemini calls go through `lib/gemini.ts`, built on the `@google/genai` SDK:
@@ -100,10 +129,10 @@ npm run lint         # eslint . (flat config in eslint.config.mjs; one file: npx
   - Client components show the server's `error` text (with "Try again" where it makes sense); never fail silently.
 - **Free-tier keys** have small per-minute and per-day limits *per model*. Heavy testing exhausts them quickly. Use the stub (`GEMINI_BASE_URL`) for automated runs.
 - **Learner-grounded AI:**
-  - `lib/learner.ts`: `loadLearner()` returns one snapshot (profile, roadmaps with per-topic completion, hours, streak, last-7-days activity, goals). `describeLearner()` turns it into prompt context.
+  - `lib/learner.ts`: `loadLearner()` returns one snapshot (profile, roadmaps with per-topic completion, hours, streak, last-7-days activity, goals, points and rewards). `describeLearner()` turns it into prompt context, marking demo rewards as such.
   - These use it: `/api/mentor` (AI Mentor chat), `/api/career-guidance` (when `rag` is true, it adds the snapshot plus NSQF reference data), and the AI Mentor and Career Guidance pages.
 - **Other AI routes:** `/api/resume-match` (score, strengths, gaps, courses) and `/api/career-compare` (two paths: roles, LPA ranges, demand, months to job-ready). Both are zod-validated.
-- **Badges:** `lib/achievements.ts` computes them from the snapshot. There's no badge table.
+- **Badges:** `lib/achievements.ts` computes them from the snapshot. There's no badge table (see "Points and rewards").
 - **Personal NSQF path:** `lib/nsqf-path.ts` (`buildRoadmap`) is shared by `/api/nsqf/roadmap` and the Career Guidance tracker, which builds it from the user's onboarding answers.
 
 ### NSQF logic
@@ -128,6 +157,7 @@ npm run lint         # eslint . (flat config in eslint.config.mjs; one file: npx
 
 ### Static or mock areas
 - Jobs show built-in sample listings until `ADZUNA_APP_ID` / `ADZUNA_APP_KEY` are set.
+- The six `demo` rewards in `reward_catalog` deliver nothing; only the three `perk` items do something.
 - `@vercel/analytics` requests `/_vercel/insights/script.js`, which 404s anywhere except on Vercel. That's expected.
 
 ## Local end-to-end testing

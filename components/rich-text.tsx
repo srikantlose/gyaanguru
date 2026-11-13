@@ -6,7 +6,8 @@ import { cn } from "@/lib/utils"
  * bullet/numbered lists, headings, paragraphs) as React elements. No HTML is injected.
  */
 
-const INLINE = /(\*\*[^*]+\*\*|__[^_]+__|`[^`]+`|\*[^*\s][^*]*\*|_[^_\s][^_]*_)/g
+// Underscore emphasis only counts at word edges, as in CommonMark, so snake_case_names stay intact.
+const INLINE = /(\*\*[^*]+\*\*|(?<!\w)__[^_]+__(?!\w)|`[^`]+`|\*[^*\s][^*]*\*|(?<!\w)_[^_\s][^_]*_(?!\w))/g
 
 function renderInline(text: string, keyPrefix: string): React.ReactNode[] {
   return text.split(INLINE).map((part, i) => {

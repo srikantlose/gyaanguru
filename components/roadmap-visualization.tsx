@@ -15,7 +15,11 @@ import {
   Send,
   BookOpen,
   Network,
+  PartyPopper,
+  Star,
+  TriangleAlert,
 } from "lucide-react"
+import Link from "next/link"
 import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -71,6 +75,11 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({})
   const [quizSubmitted, setQuizSubmitted] = useState(false)
   const [quizError, setQuizError] = useState<string | null>(null)
+  // Points feedback: a "+5" pop per new lesson, a card when the roadmap bonus is paid, and save errors.
+  const [pointsPop, setPointsPop] = useState<{ id: number; amount: number } | null>(null)
+  const [roadmapBonus, setRoadmapBonus] = useState<number | null>(null)
+  const [progressError, setProgressError] = useState<string | null>(null)
+  const popCounter = useRef(0)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const scrollToBottom = () => {
@@ -130,19 +139,20 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
 
   const toggleTopic = async (topicId: string, moduleIndex: number, topicIndex: number) => {
     const isCurrentlyCompleted = completedTopics.has(topicId)
+    const flip = (done: boolean) =>
+      setCompletedTopics((prev) => {
+        const next = new Set(prev)
+        if (done) next.add(topicId)
+        else next.delete(topicId)
+        return next
+      })
 
-    setCompletedTopics((prev) => {
-      const newSet = new Set(prev)
-      if (isCurrentlyCompleted) {
-        newSet.delete(topicId)
-      } else {
-        newSet.add(topicId)
-      }
-      return newSet
-    })
+    // Optimistic tick, rolled back if the save fails.
+    flip(!isCurrentlyCompleted)
+    setProgressError(null)
 
     try {
-      await fetch("/api/progress", {
+      const response = await fetch("/api/progress", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -152,8 +162,21 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
           completed: !isCurrentlyCompleted,
         }),
       })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(data?.error || "Couldn't save your progress.")
+
+      const earned = Number(data?.awarded?.topic) || 0
+      const bonus = Number(data?.awarded?.bonus) || 0
+      if (earned > 0) {
+        const id = ++popCounter.current
+        setPointsPop({ id, amount: earned })
+        setTimeout(() => setPointsPop((p) => (p?.id === id ? null : p)), 2200)
+      }
+      if (bonus > 0) setRoadmapBonus(bonus)
     } catch (error) {
       console.error("Error saving progress:", error)
+      flip(isCurrentlyCompleted)
+      setProgressError(error instanceof Error ? error.message : "Couldn't save your progress.")
     }
   }
 
@@ -656,7 +679,10 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
 
               <Button
                 onClick={() => {
-                  toggleTopic(currentTopic.id, selectedTopic.moduleIndex, selectedTopic.topicIndex)
+                  // "Next Lesson" on a lesson that's already done just moves on; it must not untick it.
+                  if (!completedTopics.has(currentTopic.id)) {
+                    toggleTopic(currentTopic.id, selectedTopic.moduleIndex, selectedTopic.topicIndex)
+                  }
                   const currentModule = roadmap.modules[selectedTopic.moduleIndex]
                   if (selectedTopic.topicIndex < currentModule.topics.length - 1) {
                     setSelectedTopic({ ...selectedTopic, topicIndex: selectedTopic.topicIndex + 1 })
@@ -933,6 +959,54 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
           </Card>
         </div>
       )}
+
+      {/* Points feedback, bottom-right on desktop and full-width at the bottom on phones. */}
+      <div className="pointer-events-none fixed inset-x-4 bottom-4 z-40 flex flex-col items-end gap-3 sm:inset-x-auto sm:right-6 sm:w-96">
+        {pointsPop && (
+          <div
+            key={pointsPop.id}
+            role="status"
+            className="rise-in flex -rotate-3 items-center gap-2 rounded-full border-2 border-ink bg-marigold px-4 py-2 font-display text-lg font-extrabold text-ink shadow-brut"
+          >
+            <Star className="h-5 w-5" />+{pointsPop.amount} points
+          </div>
+        )}
+        {progressError && (
+          <div role="alert" className="pointer-events-auto flex w-full items-start gap-3 rounded-2xl border-2 border-ink bg-coral-soft p-4 shadow-brut">
+            <TriangleAlert className="mt-0.5 h-5 w-5 shrink-0 text-coral-ink" />
+            <p className="flex-1 text-sm font-semibold text-ink">{progressError}</p>
+            <button type="button" onClick={() => setProgressError(null)} aria-label="Dismiss" className="text-ink/60 hover:text-ink">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
+        {roadmapBonus !== null && (
+          <div role="status" className="rise-in pointer-events-auto w-full rounded-2xl border-2 border-ink bg-leaf-soft p-5 shadow-lift">
+            <div className="flex items-start gap-3">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border-2 border-ink bg-leaf">
+                <PartyPopper className="h-5 w-5 text-ink" />
+              </span>
+              <div className="flex-1">
+                <p className="font-display text-lg font-extrabold text-ink">Roadmap finished!</p>
+                <p className="text-sm text-ink/75">
+                  You earned a <strong className="text-ink">+{roadmapBonus} point</strong> bonus for completing every lesson.
+                </p>
+              </div>
+              <button type="button" onClick={() => setRoadmapBonus(null)} aria-label="Dismiss" className="text-ink/60 hover:text-ink">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Button asChild size="sm">
+                <Link href="/rewards#perks">Get your certificate</Link>
+              </Button>
+              <Button asChild size="sm" variant="outline">
+                <Link href="/rewards">See rewards</Link>
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

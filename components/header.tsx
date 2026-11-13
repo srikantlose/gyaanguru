@@ -4,7 +4,7 @@ import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 import type { User } from "@supabase/supabase-js"
-import { Briefcase, Compass, Layers, LayoutDashboard, Menu, Route } from "lucide-react"
+import { Briefcase, Compass, Gift, Layers, LayoutDashboard, Menu, Route } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Logo } from "@/components/logo"
@@ -16,6 +16,7 @@ const memberLinks = [
   { href: "/generate", label: "Generate", icon: Route, tone: "text-coral-ink" },
   { href: "/jobs", label: "Jobs", icon: Briefcase, tone: "text-lagoon-ink" },
   { href: "/career-guidance", label: "Career Guidance", icon: Compass, tone: "text-leaf-ink" },
+  { href: "/rewards", label: "Rewards", icon: Gift, tone: "text-bubblegum-ink" },
   { href: "/nsqf/demo", label: "NSQF Demo", icon: Layers, tone: "text-marigold-ink" },
 ]
 
@@ -52,7 +53,7 @@ export function Header() {
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`)
 
   return (
-    <header className="sticky top-0 z-50 border-b-2 border-ink bg-paper/90 backdrop-blur-sm">
+    <header className="sticky top-0 z-50 border-b-2 border-ink bg-paper/90 backdrop-blur-sm print:hidden">
       <div className="container mx-auto flex h-16 items-center justify-between gap-4 px-4">
         <Logo />
 

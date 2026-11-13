@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { ArrowRight, BookOpen, CheckCircle2, Clock, Layers, Map as MapIcon, Plus, Sparkle, Star, UserRound } from "lucide-react"
 import { DeleteRoadmapButton } from "@/components/delete-roadmap-button"
+import { StickerShelf } from "@/components/sticker-shelf"
 import { PageHeader } from "@/components/page-header"
 import { SpotlightCard } from "@/components/spotlight-card"
 import { GrowthIllustration, MapIllustration } from "@/components/illustrations"
@@ -65,6 +66,16 @@ export default async function DashboardPage() {
   })
 
   const points = typeof profile?.points === "number" ? profile.points : 0
+
+  // Lifetime totals for the Points tile, and whether the Sticker Pack reward is unlocked. Both tables
+  // come from scripts/schema.sql; until it has been run these return errors and we fall back quietly.
+  const [{ data: pointRows }, { data: stickerRows }] = await Promise.all([
+    supabase.from("point_events").select("amount").eq("user_id", user.id),
+    supabase.from("reward_redemptions").select("id").eq("user_id", user.id).eq("reward_id", "sticker-pack").limit(1),
+  ])
+  const pointsSpent = (pointRows ?? []).reduce((acc, r) => acc + Math.max(0, -Number(r.amount)), 0)
+  const pointsEarned = pointRows ? pointRows.reduce((acc, r) => acc + Math.max(0, Number(r.amount)), 0) : points
+  const hasStickers = (stickerRows ?? []).length > 0
   const topicsDone = roadmapsWithProgress.reduce((acc, r) => acc + r.completedTopics, 0)
   const savedLevel = profile?.onboarding_data?.current_nsqf_level
   const currentLevel =
@@ -75,8 +86,24 @@ export default async function DashboardPage() {
           null,
         )
 
-  const stats = [
-    { label: "Points", value: points, icon: Star, tile: "bg-marigold-soft", iconBg: "bg-marigold text-ink border-2 border-ink" },
+  const stats: {
+    label: string
+    value: string | number
+    icon: typeof Star
+    tile: string
+    iconBg: string
+    href?: string
+    hint?: string
+  }[] = [
+    {
+      label: "Points",
+      value: points,
+      icon: Star,
+      tile: "bg-marigold-soft",
+      iconBg: "bg-marigold text-ink border-2 border-ink",
+      href: "/rewards",
+      hint: `${pointsEarned} earned · ${pointsSpent} spent`,
+    },
     { label: "Roadmaps", value: roadmapsWithProgress.length, icon: MapIcon, tile: "bg-brand-soft", iconBg: "bg-brand text-ink border-2 border-ink" },
     { label: "Topics done", value: topicsDone, icon: CheckCircle2, tile: "bg-leaf-soft", iconBg: "bg-leaf text-ink border-2 border-ink" },
     {
@@ -114,25 +141,29 @@ export default async function DashboardPage() {
           art={<GrowthIllustration />}
         />
 
+        {hasStickers && <StickerShelf />}
+
         {/* stats */}
         <dl className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-          {stats.map(({ label, value, icon: Icon, tile, iconBg }) => (
-            <div
-              key={label}
-              className={cn(
-                "brut brut-interactive flex items-center gap-3 rounded-2xl p-4 sm:p-5",
-                tile,
-              )}
-            >
+          {stats.map(({ label, value, icon: Icon, tile, iconBg, href, hint }) => (
+            <div key={label} className={cn("brut brut-interactive relative flex items-center gap-3 rounded-2xl p-4 sm:p-5", tile)}>
               <span className={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-xl", iconBg)}>
                 <Icon className="h-5 w-5" />
               </span>
-              <div>
+              <div className="min-w-0">
                 <dt className="text-sm font-semibold text-ink/70">{label}</dt>
                 <dd className="font-display text-2xl font-extrabold text-ink" data-stat={label}>
                   {value}
                 </dd>
+                {hint && <dd className="text-xs font-semibold leading-snug text-ink/60">{hint}</dd>}
               </div>
+              {href && (
+                <>
+                  <ArrowRight className="ml-auto hidden h-4 w-4 shrink-0 text-ink/60 sm:block" />
+                  {/* Whole tile is the link, while the dt/dd stay valid children of the dl. */}
+                  <Link href={href} className="absolute inset-0 rounded-2xl" aria-label={`${label}: ${value}. Open rewards`} />
+                </>
+              )}
             </div>
           ))}
         </dl>

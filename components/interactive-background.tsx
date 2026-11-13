@@ -49,7 +49,7 @@ export function InteractiveBackground() {
     <div
       ref={ref}
       aria-hidden
-      className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"
+      className="pointer-events-none fixed inset-0 -z-10 overflow-hidden print:hidden"
       style={{ ["--mx" as string]: "-1000px", ["--my" as string]: "-1000px" }}
     >
       {/* ruled lines */}
