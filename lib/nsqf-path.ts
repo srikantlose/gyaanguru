@@ -1,95 +1,80 @@
 import { NSQF_MAX_LEVEL, clampNsqfLevel } from "@/lib/nsqf"
+import { getTrack, guessTrack, isCurrent, ladder, listTracks, rankQualifications, type Qualification, type Track } from "@/lib/qualifications"
 
-type RefRow = {
+/**
+ * A rough starting level from the learner's highest education, using the official NSQF entry
+ * rules (the "minimum education" column of the NCVET level table): Grade 10 → 3, Grade 12 → 4,
+ * a 3-year diploma or 1st year of UG → 4.5, a UG degree → 5.5, a 4-year UG or PG → 6.
+ * Returned as the app's band (half levels round up). Always shown as "estimated", never tested.
+ */
+export function estimateLevelFromEducation(education: string | null | undefined): number | null {
+  const e = ` ${(education ?? "").toLowerCase()} `
+  if (!e.trim()) return null
+  if (/ph\.?\s?d|doctor|post ?grad|master|\bm\.?\s?(tech|sc|com|a|e)\b|\bmba\b|\bmca\b|\bpg\b/.test(e)) return 6
+  if (/diploma|polytechnic/.test(e)) return 5
+  if (/\bb\.?\s?tech\b|\bb\.?\s?e\.?\s|4[- ]?year|engineering/.test(e)) return 6
+  if (/graduat|bachelor|degree|\bb\.?\s?(sc|com|a)\b|\bbca\b|\bbba\b|\bug\b|college/.test(e)) return 6
+  if (/\biti\b|\b(11|12)(th)?\b|hsc|higher secondary|senior secondary|intermediate|\bpuc\b|plus two/.test(e)) return 4
+  if (/\b10(th)?\b|\bssc\b|matric|secondary|high school/.test(e)) return 3
+  return null
+}
+
+export type PathNode = {
+  /** The app's band (3-6) for this step. */
+  nsqfLevel: number
+  qualificationId: string
+  title: string
+  /** The qualification's exact NSQF level, e.g. 4.5. */
   level: number
-  qualificationRequirement: string
-  exampleJobRoles: string[]
-  courses: string[]
+  code: string
+  awardingBody: string
+  occupation: string | null
+  url: string
+  alternatives: { id: string; title: string; level: number }[]
 }
 
-export type LearnerInput = {
-  education: string
-  skills: string[] | string
-  goal: string
+export type PathInput = {
+  education?: string | null
+  skills?: string[] | string | null
+  goal?: string | null
+  /** A track id; guessed from goal and skills when missing. */
+  track?: string | null
+  /** The learner's level (tested or estimated); estimated from education when missing. */
+  level?: number | null
+  /** Today's date key (YYYY-MM-DD), to leave out qualifications whose approval has lapsed. */
+  today: string
 }
 
-function toArray(val: string[] | string | undefined | null): string[] {
-  if (!val) return []
-  if (Array.isArray(val)) return val.map((s) => s.trim()).filter(Boolean)
-  return val
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean)
-}
+const asText = (v: string[] | string | null | undefined) => (Array.isArray(v) ? v.join(", ") : (v ?? ""))
 
-function chooseStartLevel({ education, skills }: LearnerInput): number {
-  const s = toArray(skills).map((x) => x.toLowerCase())
-  const edu = (education || "").toLowerCase()
-  if (edu.includes("class 12") && (s.includes("basic it") || s.includes("excel"))) return 4
-  if (edu.includes("class 10")) return 3
-  if (edu.includes("diploma")) return 5
-  if (edu.includes("graduate") || edu.includes("bachelor") || edu.includes("degree")) return 6
-  // default MVP floor
-  return 4
-}
-
-function pickPreferred(items: string[], goal: string): string {
-  if (!items?.length) return ""
-  const g = goal.toLowerCase()
-  return items.find((v) => v.toLowerCase().includes("marketing")) || items[0]
-}
-
-async function loadDataset(): Promise<RefRow[]> {
-  // dynamic imports work in Next route handlers and avoid TS JSON config concerns
-  const base = (await import("@/data/nsqf-reference.json")).default as RefRow[]
-  let marketing: RefRow[] = []
-  try {
-    marketing = (await import("@/data/nsqf-reference-marketing.json")).default as RefRow[]
-  } catch {
-    marketing = []
-  }
-  // merge by level, marketing overrides/adds alternatives
-  const map = new Map<number, RefRow>()
-  base.forEach((r) => map.set(r.level, r))
-  marketing.forEach((m) => map.set(m.level, m))
-  return Array.from(map.values()).sort((a, b) => a.level - b.level)
-}
-
-/** Rule-based 3-step NSQF pathway (L4→L6) from education, skills and goal, using data/*.json. */
-export async function buildRoadmap(input: LearnerInput) {
-  const dataset = await loadDataset()
-  const byLevel = new Map<number, RefRow>(dataset.map((r) => [r.level, r]))
-  const start = chooseStartLevel(input)
-  const startClamped = clampNsqfLevel(start)
-  // We produce a 3-level path, typically L4 -> L5 -> L6 (or from start to the top level)
-  const first = Math.max(4, startClamped)
-  const levels = [first, Math.min(NSQF_MAX_LEVEL, first + 1), NSQF_MAX_LEVEL].filter(
-    (lvl, idx, arr) => idx === 0 || lvl > arr[idx - 1],
-  )
-
-  const path = levels.map((lvl) => {
-    const ref = byLevel.get(lvl)
-    const course = pickPreferred(ref?.courses || [], input.goal)
-    const job = pickPreferred(ref?.exampleJobRoles || [], input.goal)
-    return {
-      nsqfLevel: lvl,
-      course,
-      jobRole: job,
-      qualification: ref?.qualificationRequirement || "",
-      alternatives: {
-        courses: (ref?.courses || []).filter((c) => c !== course),
-        jobRoles: (ref?.exampleJobRoles || []).filter((j) => j !== job),
-      },
-    }
-  })
-
+function toNode(band: number, q: Qualification, rest: Qualification[]): PathNode {
   return {
-    learner: {
-      education: input.education,
-      skills: toArray(input.skills),
-      goal: input.goal,
-      startLevel: start,
-    },
-    path,
+    nsqfLevel: band,
+    qualificationId: q.id,
+    title: q.title,
+    level: q.level,
+    code: q.code,
+    awardingBody: q.awardingBody,
+    occupation: q.occupation,
+    url: q.url,
+    alternatives: rest.map((a) => ({ id: a.id, title: a.title, level: a.level })),
   }
+}
+
+/**
+ * Rule-based NSQF path from the learner's level up to level 6 in one track, one real
+ * qualification per band (best match for the goal first, the rest as alternatives).
+ */
+export function buildPath(input: PathInput): { track: Track; startLevel: number; estimated: boolean; path: PathNode[] } {
+  const goal = asText(input.goal)
+  const track = getTrack(input.track) ?? guessTrack(`${goal} ${asText(input.skills)}`) ?? listTracks()[0]
+  const given = typeof input.level === "number" && Number.isFinite(input.level) ? input.level : null
+  const start = clampNsqfLevel(given ?? estimateLevelFromEducation(input.education) ?? 4)
+  const steps = ladder(track.id)
+  const path: PathNode[] = []
+  for (let band = start; band <= NSQF_MAX_LEVEL; band++) {
+    const list = rankQualifications((steps.get(band) ?? []).filter((q) => isCurrent(q, input.today)), goal)
+    if (list.length) path.push(toNode(band, list[0], list.slice(1)))
+  }
+  return { track, startLevel: start, estimated: given === null, path }
 }

@@ -24,6 +24,7 @@ export function RoadmapVerifyDialog({
   recapApproved,
   bonusPaid,
   bonusAmount,
+  qualificationTitle,
   onApproved,
 }: {
   open: boolean
@@ -33,6 +34,8 @@ export function RoadmapVerifyDialog({
   recapApproved: boolean
   bonusPaid: boolean
   bonusAmount: number
+  /** The real NSQF qualification the roadmap prepares for, if any. */
+  qualificationTitle?: string
   onApproved: (bonus: number) => void
 }) {
   const [recap, setRecap] = useState("")
@@ -161,6 +164,21 @@ export function RoadmapVerifyDialog({
             <Button asChild size="sm">
               <Link href="/rewards#perks">Get your certificate</Link>
             </Button>
+          </div>
+        )}
+        {bonusPaid && qualificationTitle && (
+          <div className="rounded-xl border-2 border-ink bg-leaf-soft px-3 py-3 text-sm">
+            <p className="font-semibold text-ink">
+              Next: get officially certified. GyaanGuru&apos;s certificate isn&apos;t an NSQF qualification; the official assessment
+              for <strong>{qualificationTitle}</strong> is.
+            </p>
+            <a
+              href="#get-certified"
+              onClick={() => onOpenChange(false)}
+              className="mt-1 inline-block font-bold text-primary underline-offset-2 hover:underline"
+            >
+              See the steps
+            </a>
           </div>
         )}
       </DialogContent>

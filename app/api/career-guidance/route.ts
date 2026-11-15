@@ -2,8 +2,9 @@ import { NextResponse } from "next/server"
 import type { Content } from "@google/genai"
 import { createClient } from "@/lib/supabase/server"
 import { AI_BUSY_MESSAGE, AIUnavailableError, generateText } from "@/lib/gemini"
-import { describeLearner, loadLearner } from "@/lib/learner"
-import { getNsqfMapping } from "@/lib/nsqf"
+import { dayKey, describeLearner, loadLearner } from "@/lib/learner"
+import { describeNsqfLevel } from "@/lib/nsqf"
+import { QUALIFICATIONS_CHECKED_ON, coreUnits, formatLevel, isCurrent, listQualifications, listTracks } from "@/lib/qualifications"
 
 export async function POST(req: Request) {
   try {
@@ -47,21 +48,29 @@ export async function POST(req: Request) {
     let groundingContext = ""
     if (ragEnabled) {
       const learner = await loadLearner(supabase, user.id)
-      const nsqfRows = [1, 2, 3, 4, 5, 6]
-        .map((lvl) => {
-          const m = getNsqfMapping(lvl)
-          return `L${lvl}: knowledge "${m.descriptors.knowledge}", skills "${m.descriptors.skills}", responsibility "${m.descriptors.responsibility}"; roles: ${m.exampleJobRoles.join(", ")}; qualifications: ${m.requiredQualifications.join(", ")}; courses: ${m.exampleCourses.join(", ")}`
+      const today = dayKey(new Date())
+      const nsqfRows = [3, 4, 5, 6].map((lvl) => describeNsqfLevel(lvl)).join("\n\n")
+      const qualificationRows = listTracks()
+        .map((t) => {
+          const rows = listQualifications()
+            .filter((q) => q.tracks[0] === t.id && isCurrent(q, today))
+            .sort((a, b) => a.level - b.level)
+            .map((q) => `- "${q.title}" (level ${formatLevel(q.level)}, NQR code ${q.code}, by ${q.awardingBody}): ${coreUnits(q).map((u) => u.title).join("; ")}`)
+          return `${t.name}:\n${rows.join("\n")}`
         })
-        .join("\n")
+        .join("\n\n")
       groundingContext = `
 
 THE USER'S PROFILE AND PROGRESS (from GyaanGuru)
 ${describeLearner(learner)}
 
-NSQF REFERENCE (from GyaanGuru's dataset)
+OFFICIAL NSQF LEVEL DESCRIPTORS (NCVET, levels 3-6)
 ${nsqfRows}
 
-Use this context: refer to the user's actual goals, level and roadmaps, and cite NSQF levels from the reference when relevant.`
+REAL NSQF QUALIFICATIONS (copied from the National Qualifications Register, nqr.gov.in, on ${QUALIFICATIONS_CHECKED_ON})
+${qualificationRows}
+
+Use this context: refer to the user's actual goals, level and roadmaps. When you recommend an NSQF qualification, only name ones from the list above, by their exact title and level, and say they're listed on nqr.gov.in and assessed by the awarding body. Don't invent qualification names, codes or levels. Be clear that a GyaanGuru level or certificate is not an official NSQF qualification.`
     }
 
     const systemPrompt = `You are an expert career guidance counselor in India supporting ${personaNormalized}s, helping with:

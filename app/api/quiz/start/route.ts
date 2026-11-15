@@ -84,7 +84,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "You've reached today's quiz limit. Come back tomorrow." }, { status: 429 })
     }
 
-    const questions = await generateLessonQuiz(lesson.topic.title ?? "this lesson", lesson.topic.description ?? "")
+    const questions = await generateLessonQuiz(lesson.topic.title ?? "this lesson", lesson.topic.description ?? "", lesson.unit)
     const { data: quiz, error: insertError } = await admin
       .from("lesson_quizzes")
       .insert({ ...key, questions })

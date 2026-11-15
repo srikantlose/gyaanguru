@@ -10,7 +10,7 @@ const ResultSchema = z.object({
   strengths: z.array(z.string()).default([]),
   missingSkills: z.array(z.string()).default([]),
   suggestedCourses: z.array(z.string()).default([]),
-  nsqfLevel: z.coerce.number().int().min(1).max(10).optional(),
+  nsqfLevel: z.coerce.number().int().min(1).max(8).optional(),
 })
 
 
@@ -49,7 +49,7 @@ Return ONLY JSON:
   "strengths": ["3-5 concrete strengths found in the resume"],
   "missingSkills": ["3-6 specific skills/tools/experience they should add"],
   "suggestedCourses": ["2-4 specific courses or certifications available in India"],
-  "nsqfLevel": NSQF level (1-10) that matches their current profile
+  "nsqfLevel": the NSQF level (1-8, the framework revised in 2023) that best matches their current profile
 }`
 
     let raw: unknown

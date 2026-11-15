@@ -39,15 +39,15 @@ const notes: {
     cta: "Make a roadmap",
   },
   {
-    title: "Mapped to NSQF levels",
-    description: "Every roadmap is rated L3–L6, with matching job roles and qualifications.",
+    title: "Built on real NSQF qualifications",
+    description: "Pick a qualification from the government register and every module follows its official units. Then take the real assessment.",
     tone: "brand",
     tape: "marigold",
     tilt: 1.5,
     art: "nsqf",
     scribble: "level",
     href: "/nsqf/demo",
-    cta: "Try the NSQF demo",
+    cta: "Plan your NSQF path",
   },
   {
     title: "Lessons, quizzes & a tutor",

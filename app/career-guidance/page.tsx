@@ -10,9 +10,9 @@ import { NsqfRoadmap } from "@/components/nsqf-roadmap"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { PageHeader } from "@/components/page-header"
 import { ChatIllustration } from "@/components/illustrations"
-import { loadLearner } from "@/lib/learner"
+import { dayKey, loadLearner } from "@/lib/learner"
 import { computeAchievements } from "@/lib/achievements"
-import { buildRoadmap } from "@/lib/nsqf-path"
+import { buildPath } from "@/lib/nsqf-path"
 
 export default async function CareerGuidancePage() {
   const supabase = await createServerClient()
@@ -28,19 +28,15 @@ export default async function CareerGuidancePage() {
   const achievements = computeAchievements(learner)
   const o = learner.onboarding
   const goal = learner.goals.targetRole || learner.goals.shortTerm || learner.roadmaps[0]?.title || "career growth"
-  const path = await buildRoadmap({
+  const path = buildPath({
     education: o.academicBackground?.highestQualification || "",
     skills: o.priorSkills?.skills || "",
     goal,
+    // A tested level also fixes the track it was tested in.
+    track: learner.level.source === "tested" ? learner.level.track : null,
+    level: learner.level.value,
+    today: dayKey(new Date()),
   })
-  const nodes = path.path.map((p) => ({
-    nsqfLevel: p.nsqfLevel,
-    course: p.course,
-    jobRole: p.jobRole,
-    qualification: p.qualification,
-    alternatives: p.alternatives,
-  }))
-  const startLevel = learner.currentLevel ?? path.learner.startLevel
 
   return (
     <main>
@@ -86,8 +82,8 @@ export default async function CareerGuidancePage() {
                 <CardHeader>
                   <CardTitle className="text-xl">NSQF Progress Tracker</CardTitle>
                   <p className="text-sm text-muted-foreground">
-                    Your path toward &ldquo;{goal}&rdquo;, based on your onboarding answers. Complete the current course to
-                    move up a level.
+                    Real NSQF qualifications from the National Qualifications Register, from your level up to level 6, for
+                    &ldquo;{goal}&rdquo;. Build a roadmap on any of them; the official assessment is what moves you up a level.
                     {!learner.onboarded && (
                       <>
                         {" "}
@@ -100,11 +96,11 @@ export default async function CareerGuidancePage() {
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <NsqfRoadmap initialNodes={nodes} learner={{ startLevel }} />
+                  <NsqfRoadmap nodes={path.path} level={learner.level} trackName={path.track.name} />
                   <p className="text-xs text-muted-foreground">
-                    Want an AI-generated pathway? Try the{" "}
+                    Want a different track? Use the{" "}
                     <Link href="/nsqf/demo" className="font-semibold text-primary underline underline-offset-4">
-                      NSQF pathway builder
+                      NSQF path planner
                     </Link>
                     .
                   </p>

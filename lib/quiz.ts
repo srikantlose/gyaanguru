@@ -1,8 +1,11 @@
 import "server-only"
 import { z } from "zod"
 import type { createClient } from "@/lib/supabase/server"
-import { generateJson } from "@/lib/gemini"
+import { ModelOutputError, generateJson } from "@/lib/gemini"
 import { dayKey } from "@/lib/learner"
+import { describeNsqfLevel } from "@/lib/nsqf"
+import { PLACEMENT_BANDS, PLACEMENT_PER_BAND, type PlacementBand, type PlacementQuestion } from "@/lib/placement"
+import { coreUnits, getQualification, getTrack, isCurrent, ladder } from "@/lib/qualifications"
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>
 
@@ -28,11 +31,27 @@ export type QuizQuestion = z.infer<typeof QuizSchema>["questions"][number]
 /** What the browser gets: no correct answers, no explanations. */
 export type PublicQuestion = { question: string; options: string[] }
 
-export async function generateLessonQuiz(topic: string, description: string): Promise<QuizQuestion[]> {
+/** The official unit (NOS) a lesson belongs to, looked up from the catalogue, never from roadmap content. */
+export type LessonUnit = { code: string; title: string; qualification: string }
+
+export function lessonUnit(content: unknown, moduleIndex: number): LessonUnit | null {
+  const c = content as { qualification?: { id?: unknown }; modules?: { unit?: unknown }[] } | null
+  const q = getQualification(c?.qualification?.id)
+  const code = c?.modules?.[moduleIndex]?.unit
+  if (!q || typeof code !== "string") return null
+  const unit = q.units.find((u) => u.code === code)
+  return unit ? { code: unit.code, title: unit.title, qualification: q.title } : null
+}
+
+export async function generateLessonQuiz(topic: string, description: string, unit?: LessonUnit | null): Promise<QuizQuestion[]> {
   const prompt = `Generate a quiz with 4 multiple-choice questions about "${topic}".
 
 Context: ${description}
-
+${
+  unit
+    ? `\nThis lesson is part of the official unit ${unit.code} "${unit.title}" of the NSQF qualification "${unit.qualification}". Keep the questions practical and relevant to that unit.\n`
+    : ""
+}
 Return ONLY a valid JSON object (no markdown, no code blocks) in this exact format:
 {
   "questions": [
@@ -71,6 +90,8 @@ export type LessonContext = {
   roadmap: { id: string; title: string; modules: Module[] }
   module: Module
   topic: Topic
+  /** The official unit this lesson's module covers, when the roadmap targets a qualification. */
+  unit: LessonUnit | null
 }
 
 /** The caller's roadmap and one of its lessons, or null if either doesn't exist. Uses the RLS-scoped client. */
@@ -92,7 +113,95 @@ export async function loadLesson(
   const mod = modules[moduleIndex]
   const topic = mod?.topics?.[topicIndex]
   if (!mod || !topic) return null
-  return { roadmap: { id: data.id, title: data.title, modules }, module: mod, topic }
+  return { roadmap: { id: data.id, title: data.title, modules }, module: mod, topic, unit: lessonUnit(data.content, moduleIndex) }
+}
+
+const PlacementOutputSchema = z.object({
+  questions: z
+    .array(
+      z.object({
+        band: z.coerce.number().int(),
+        unit: z.string().min(1),
+        question: z.string().min(1),
+        options: z.array(z.string().min(1)).length(4),
+        correctAnswer: z.number().int().min(0).max(3),
+        explanation: z.string().optional().default(""),
+      }),
+    )
+    .min(1),
+})
+
+function shuffleOptions(q: { options: string[]; correctAnswer: number }) {
+  const order = q.options.map((_, i) => i)
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[order[i], order[j]] = [order[j], order[i]]
+  }
+  return { options: order.map((i) => q.options[i]), correctAnswer: order.indexOf(q.correctAnswer) }
+}
+
+/**
+ * A placement test for one track: PLACEMENT_PER_BAND questions at each band 3-6, each built on a
+ * real unit (NOS) of a qualification at that band, pitched at the official level descriptor.
+ * The prompt contains only catalogue data, no learner text. Throws ModelOutputError when the
+ * model's output breaks the rules (wrong count per band, unknown unit code).
+ */
+export async function generatePlacementTest(trackId: string, today: string): Promise<PlacementQuestion[]> {
+  const track = getTrack(trackId)
+  if (!track) throw new Error(`Unknown track ${trackId}`)
+  const steps = ladder(trackId)
+  const sections = PLACEMENT_BANDS.map((band) => {
+    const seen = new Set<string>()
+    const units = (steps.get(band) ?? [])
+      .filter((q) => isCurrent(q, today))
+      .flatMap((q) => coreUnits(q).map((u) => ({ ...u, qualification: q.title })))
+      .filter((u) => (seen.has(u.code) ? false : (seen.add(u.code), true)))
+    return { band, units }
+  })
+
+  const sectionText = sections
+    .map(({ band, units }) =>
+      [
+        `## Level ${band}`,
+        describeNsqfLevel(band),
+        units.length
+          ? `Units at this level (code: title, from qualification):\n${units.map((u) => `- ${u.code}: ${u.title} (${u.qualification})`).join("\n")}`
+          : `No qualification in this track sits at level ${band} in the catalogue. Base these questions on the descriptor and everyday entry-level tasks in ${track.name}, and set "unit" to "descriptor".`,
+      ].join("\n"),
+    )
+    .join("\n\n")
+
+  const prompt = `You are writing a placement test for India's National Skills Qualifications Framework (NSQF), track "${track.name}" (${track.blurb}).
+
+The test has one section per NSQF level below. For each section write exactly ${PLACEMENT_PER_BAND} multiple-choice questions that someone working at that level can answer and someone below it mostly can't. Base each question on one of that section's units (real National Occupational Standards from the National Qualifications Register) and put the unit's code in "unit".
+
+${sectionText}
+
+Rules:
+- Exactly ${PLACEMENT_PER_BAND * PLACEMENT_BANDS.length} questions: ${PLACEMENT_PER_BAND} per level, in level order.
+- Practical, scenario-style questions about doing the work ("which step comes first", "what is the best way to"), not questions about the NSQF itself and not trivia.
+- Each level must be clearly harder than the one before, in line with its descriptor.
+- Exactly 4 options, one clearly correct, no "all of the above". correctAnswer is its index (0-3).
+- Explanation: one short sentence saying why the answer is right.
+
+Return ONLY JSON in this format:
+{"questions": [{"band": 3, "unit": "CODE", "question": "...", "options": ["...", "...", "...", "..."], "correctAnswer": 0, "explanation": "..."}]}`
+
+  const candidate = await generateJson(prompt, { temperature: 0.7 })
+  const parsed = PlacementOutputSchema.safeParse(candidate)
+  const raw = JSON.stringify(candidate ?? null).slice(0, 2000)
+  if (!parsed.success) throw new ModelOutputError(raw)
+
+  const out: PlacementQuestion[] = []
+  for (const { band, units } of sections) {
+    const allowed = new Set(units.length ? units.map((u) => u.code) : ["descriptor"])
+    const qs = parsed.data.questions.filter((q) => q.band === band && allowed.has(q.unit))
+    if (qs.length < PLACEMENT_PER_BAND) throw new ModelOutputError(raw)
+    for (const q of qs.slice(0, PLACEMENT_PER_BAND)) {
+      out.push({ band: band as PlacementBand, unit: q.unit, question: q.question, explanation: q.explanation, ...shuffleOptions(q) })
+    }
+  }
+  return out
 }
 
 /** Start of "today" in India, as an ISO timestamp, for daily limits. */

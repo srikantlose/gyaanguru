@@ -244,7 +244,7 @@ create policy "Signed-in users can view the reward catalog"
 insert into public.reward_catalog (id, name, description, cost, kind, perk, category, tone, featured, sort)
 values
   ('streak-freeze', 'Streak Freeze', 'Covers one missed day so a busy day doesn''t break your streak. It''s used up on the first day you miss after buying it.', 120, 'perk', 'streak_freeze', 'Streak', 'lagoon', true, 10),
-  ('completion-certificate', 'Completion Certificate', 'A printable certificate for a roadmap you''ve verified (every quiz passed and your recap approved), with its NSQF level, lessons and hours.', 100, 'perk', 'certificate', 'Certificate', 'marigold', true, 20),
+  ('completion-certificate', 'Completion Certificate', 'A printable GyaanGuru certificate for a roadmap you''ve verified (every quiz passed and your recap approved), with its lessons, hours and the NSQF qualification it prepares you for. It isn''t an NSQF qualification itself.', 100, 'perk', 'certificate', 'Certificate', 'marigold', true, 20),
   ('sticker-pack', 'Sticker Pack', 'Six extra stickers for your dashboard. Drag them anywhere; double-click one to send it home.', 80, 'perk', 'sticker_pack', 'Fun', 'bubblegum', false, 30),
   ('amazon-voucher-500', 'Amazon Voucher', 'Use it for books, gadgets, and everyday essentials.', 500, 'demo', null, 'Shopping', 'coral', true, 110),
   ('learning-perk', 'Learning Perk Pack', 'Unlock a premium mentorship session, curated course bundle, or digital skill pass.', 650, 'demo', null, 'Learning', 'brand', true, 120),
@@ -368,17 +368,36 @@ create table if not exists public.roadmap_recaps (
 
 create index if not exists idx_roadmap_recaps_lookup on public.roadmap_recaps(user_id, roadmap_id, created_at desc);
 
+-- NSQF placement tests: 3 questions per level band (3-6) in one track, built from real
+-- qualification units. Stored with answers, so only the server may touch it. The result is the
+-- learner's "tested" level; read it through placement_result().
+create table if not exists public.placement_tests (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  track text not null,
+  questions jsonb not null, -- [{ band, unit, question, options, correctAnswer, explanation }]
+  answers jsonb,
+  band_scores jsonb,        -- { "3": 2, "4": 3, ... } correct answers per band
+  placed_level integer check (placed_level between 3 and 6),
+  target_level integer check (target_level between 3 and 6),
+  created_at timestamptz not null default now(),
+  submitted_at timestamptz
+);
+
+create index if not exists idx_placement_tests_user_created on public.placement_tests(user_id, created_at desc);
+
 alter table public.lesson_views enable row level security;
 alter table public.lesson_quizzes enable row level security;
 alter table public.roadmap_recaps enable row level security;
+alter table public.placement_tests enable row level security;
 -- No policies: with RLS on, signed-in users get nothing. The server's service_role bypasses RLS.
 do $$
 begin
   if exists (select 1 from pg_roles where rolname = 'authenticated') then
-    revoke all on public.lesson_views, public.lesson_quizzes, public.roadmap_recaps from authenticated;
+    revoke all on public.lesson_views, public.lesson_quizzes, public.roadmap_recaps, public.placement_tests from authenticated;
   end if;
   if exists (select 1 from pg_roles where rolname = 'anon') then
-    revoke all on public.lesson_views, public.lesson_quizzes, public.roadmap_recaps from anon;
+    revoke all on public.lesson_views, public.lesson_quizzes, public.roadmap_recaps, public.placement_tests from anon;
   end if;
 end $$;
 
@@ -612,6 +631,28 @@ as $$
   );
 $$;
 
+-- For the signed-in learner: their latest submitted placement test, or null if they've never
+-- finished one. This is the only "tested" NSQF level; onboarding_data is user-writable.
+create or replace function public.placement_result()
+returns jsonb
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select jsonb_build_object(
+    'track', p.track,
+    'placed_level', p.placed_level,
+    'target_level', p.target_level,
+    'band_scores', p.band_scores,
+    'submitted_at', p.submitted_at
+  )
+    from public.placement_tests p
+   where p.user_id = auth.uid() and p.submitted_at is not null and p.placed_level is not null
+   order by p.submitted_at desc
+   limit 1;
+$$;
+
 -- For the signed-in learner: ids of their verified roadmaps (certificate eligibility).
 create or replace function public.verified_roadmaps()
 returns setof uuid
@@ -740,7 +781,8 @@ begin
     'public.award_roadmap_bonus(uuid, uuid)',
     'public.award_lesson_quiz(uuid, uuid, integer, integer)',
     'public.quiz_status(uuid)',
-    'public.verified_roadmaps()'
+    'public.verified_roadmaps()',
+    'public.placement_result()'
   ] loop
     execute format('revoke all on function %s from public', fn);
     if exists (select 1 from pg_roles where rolname = 'anon') then
@@ -757,6 +799,7 @@ begin
     grant execute on function public.redeem_reward(text, uuid) to authenticated;
     grant execute on function public.quiz_status(uuid) to authenticated;
     grant execute on function public.verified_roadmaps() to authenticated;
+    grant execute on function public.placement_result() to authenticated;
   end if;
   if exists (select 1 from pg_roles where rolname = 'service_role') then
     grant execute on function public.award_lesson_quiz(uuid, uuid, integer, integer) to service_role;

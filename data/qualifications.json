@@ -1,0 +1,2509 @@
+{
+  "source": "National Qualifications Register (nqr.gov.in), NCVET",
+  "checkedOn": "2026-11-15",
+  "tracks": [
+    {
+      "id": "software",
+      "name": "Software & web development",
+      "blurb": "Websites, apps and software products: building, testing and designing them.",
+      "keywords": [
+        "software",
+        "developer",
+        "development",
+        "web",
+        "website",
+        "frontend",
+        "front-end",
+        "backend",
+        "back-end",
+        "full stack",
+        "full-stack",
+        "mern",
+        "react",
+        "angular",
+        "vue",
+        "next.js",
+        "javascript",
+        "typescript",
+        "node",
+        "python",
+        "java",
+        "django",
+        "spring",
+        "php",
+        "html",
+        "css",
+        "app",
+        "apps",
+        "mobile",
+        "android",
+        "ios",
+        "flutter",
+        "coding",
+        "programming",
+        "testing",
+        "tester",
+        "qa",
+        "api",
+        "git",
+        "product manager"
+      ]
+    },
+    {
+      "id": "data-ai",
+      "name": "Data & AI",
+      "blurb": "Collecting, cleaning and analysing data, and building machine-learning models.",
+      "keywords": [
+        "data",
+        "analytics",
+        "analyst",
+        "analysis",
+        "machine learning",
+        "ml",
+        "ai",
+        "artificial intelligence",
+        "deep learning",
+        "data science",
+        "data scientist",
+        "statistics",
+        "sql",
+        "excel",
+        "power bi",
+        "tableau",
+        "visualisation",
+        "visualization",
+        "pandas",
+        "big data",
+        "annotation",
+        "business intelligence",
+        "etl",
+        "pipeline",
+        "nlp",
+        "llm",
+        "genai",
+        "generative ai"
+      ]
+    },
+    {
+      "id": "infra",
+      "name": "Cloud, networks & security",
+      "blurb": "IT support, cloud platforms, networks and keeping systems secure.",
+      "keywords": [
+        "cloud",
+        "aws",
+        "azure",
+        "gcp",
+        "devops",
+        "network",
+        "networking",
+        "linux",
+        "server",
+        "it support",
+        "helpdesk",
+        "help desk",
+        "hardware",
+        "troubleshooting",
+        "system admin",
+        "sysadmin",
+        "infrastructure",
+        "kubernetes",
+        "docker",
+        "security",
+        "cyber",
+        "cybersecurity",
+        "cyber security",
+        "ethical hacking",
+        "hacking",
+        "soc",
+        "firewall",
+        "forensics",
+        "penetration",
+        "vapt",
+        "ccna"
+      ]
+    },
+    {
+      "id": "marketing",
+      "name": "Digital marketing & content",
+      "blurb": "Social media, SEO, paid ads, marketing strategy, and the design work behind them.",
+      "keywords": [
+        "marketing",
+        "digital marketing",
+        "social media",
+        "seo",
+        "sem",
+        "search engine",
+        "content",
+        "copywriting",
+        "advertising",
+        "ads",
+        "google ads",
+        "branding",
+        "brand",
+        "instagram",
+        "youtube",
+        "influencer",
+        "email marketing",
+        "graphic design",
+        "graphics",
+        "design",
+        "canva",
+        "photoshop",
+        "illustrator",
+        "video editing",
+        "multimedia",
+        "animation",
+        "campaign"
+      ]
+    }
+  ],
+  "qualifications": [
+    {
+      "id": "nqr-13529",
+      "tracks": [
+        "data-ai"
+      ],
+      "title": "Domestic Biometric Data Operator",
+      "code": "QG-03-IT-03655-2025-V2-NASSCOM",
+      "level": 3,
+      "sector": "IT-ITeS",
+      "awardingBody": "IT-ITeS Sector Skills Council NASSCOM (SSC NASSCOM)",
+      "certifyingBody": "IT-ITeS Sector Skills Council NASSCOM (SSC NASSCOM)",
+      "occupation": "Customer Relationship Management (CRM)",
+      "notionalHours": 360,
+      "approvedOn": "2025-02-18",
+      "validTill": "2028-02-18",
+      "eligibility": [
+        {
+          "criteria": "10th Completed",
+          "experience": "No Experience"
+        },
+        {
+          "criteria": "8th Passed",
+          "experience": "1.5 Years"
+        }
+      ],
+      "units": [
+        {
+          "code": "SSC/N3023",
+          "title": "Undertake Bio-Metric data entry and processing",
+          "hours": 240,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N2208",
+          "title": "Data Security and Privacy Management for Data Handling Roles",
+          "hours": 90,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "DGT/VSQ/N0101",
+          "title": "Employability Skills (30 Hours)",
+          "hours": 30,
+          "mandatory": true,
+          "core": false
+        }
+      ],
+      "url": "https://www.nqr.gov.in/qualifications/13529",
+      "fileUrl": "https://www.nqr.gov.in/qualification/file/Qfile_Domestic%20Biometric%20Data%20Operator.pdf"
+    },
+    {
+      "id": "nqr-13281",
+      "tracks": [
+        "data-ai"
+      ],
+      "title": "Data Annotator",
+      "code": "QG-04-IT-03667-2025-V2-NASSCOM",
+      "level": 4,
+      "sector": "IT-ITeS",
+      "awardingBody": "IT-ITeS Sector Skills Council NASSCOM (SSC NASSCOM)",
+      "certifyingBody": "IT-ITeS Sector Skills Council nasscom (SSC nasscom)",
+      "occupation": "Artificial Intelligence and Big Data Analytics",
+      "notionalHours": 420,
+      "approvedOn": "2022-03-31",
+      "validTill": "2028-02-18",
+      "eligibility": [
+        {
+          "criteria": "12th Passed",
+          "experience": "No Experience"
+        },
+        {
+          "criteria": "Previous NSQF qualification of Level 3",
+          "experience": "3 years"
+        },
+        {
+          "criteria": "10th Passed",
+          "experience": "1.5 Years"
+        }
+      ],
+      "units": [
+        {
+          "code": "SSC/N8135",
+          "title": "Identify, tag, and label distinct elements in huge datasets",
+          "hours": 120,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N8136",
+          "title": "Carry out effective validation activities and tests on annotated data for better accuracy",
+          "hours": 150,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N8137",
+          "title": "Review, document, and report annotations created on a regular interval",
+          "hours": 90,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "DGT/VSQ/N0102",
+          "title": "Employability Skills (60 Hours)",
+          "hours": 60,
+          "mandatory": true,
+          "core": false
+        }
+      ],
+      "url": "https://www.nqr.gov.in/qualifications/13281",
+      "fileUrl": "https://www.nqr.gov.in/qualification/file/QF_SSCQ8120_Data%20Annotator_V3.0.pdf"
+    },
+    {
+      "id": "nqr-14758",
+      "tracks": [
+        "data-ai"
+      ],
+      "title": "AI Data Engineering Analyst",
+      "code": "QG-05-IT-045812025-V2-NASSCOM",
+      "level": 5,
+      "sector": "IT-ITeS",
+      "awardingBody": "IT-ITeS Sector Skills Council NASSCOM (SSC NASSCOM)",
+      "certifyingBody": "IT-ITeS Sector Skills Council NASSCOM (SSC NASSCOM)",
+      "occupation": "Artificial Intelligence and Big Data Analytics",
+      "notionalHours": 480,
+      "approvedOn": "2020-09-22",
+      "validTill": "2028-10-07",
+      "eligibility": [
+        {
+          "criteria": "UG Diploma Completed",
+          "experience": "No Experience"
+        },
+        {
+          "criteria": "3 year Diploma after 10th Completed",
+          "experience": "1.5 Years"
+        },
+        {
+          "criteria": "Previous NSQF qualification of Level 4.5",
+          "experience": "1.5 Years"
+        }
+      ],
+      "units": [
+        {
+          "code": "SSC/N8154",
+          "title": "Understand Database Management and Architecture",
+          "hours": 120,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N8112",
+          "title": "Collect data and conduct data integration to develop a data pipeline",
+          "hours": 150,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N8119",
+          "title": "Ensure data quality and data governance processes and structures are in place",
+          "hours": 150,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "DGT/VSQ/N0102",
+          "title": "Employablity Skill (60 Hrs",
+          "hours": 60,
+          "mandatory": true,
+          "core": false
+        }
+      ],
+      "url": "https://www.nqr.gov.in/qualifications/14758",
+      "fileUrl": "https://www.nqr.gov.in/qualification/file/SSC%20Q8106_AI%20Data%20Engineering%20Analyst_V4.pdf"
+    },
+    {
+      "id": "nqr-14626",
+      "tracks": [
+        "data-ai"
+      ],
+      "title": "AI Machine Learning Analyst",
+      "code": "QG-05-IT-045832025-V2-NASSCOM",
+      "level": 5,
+      "sector": "IT-ITeS",
+      "awardingBody": "IT-ITeS Sector Skills Council NASSCOM (SSC NASSCOM)",
+      "certifyingBody": "IT- ITeS SSC NASSCOM",
+      "occupation": "Artificial Intelligence and Big Data Analytics",
+      "notionalHours": 480,
+      "approvedOn": "2018-12-19",
+      "validTill": "2028-10-07",
+      "eligibility": [
+        {
+          "criteria": "UG Diploma Completed",
+          "experience": "No Experience"
+        },
+        {
+          "criteria": "3 year Diploma after 10th Completed",
+          "experience": "1.5 Years"
+        },
+        {
+          "criteria": "Previous NSQF qualification of Level 4.5",
+          "experience": "1.5 Years"
+        }
+      ],
+      "units": [
+        {
+          "code": "SSC/N8161",
+          "title": "Handle and preprocess data",
+          "hours": 150,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N8121",
+          "title": "Develop & deploy the machine learning models",
+          "hours": 150,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N8122",
+          "title": "Monitor and maintain machine learning models post-deployment",
+          "hours": 120,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "DGT/VSQ/N0102",
+          "title": "Employability Skill (60 Hours)",
+          "hours": 60,
+          "mandatory": true,
+          "core": false
+        }
+      ],
+      "url": "https://www.nqr.gov.in/qualifications/14626",
+      "fileUrl": "https://www.nqr.gov.in/qualification/file/SSC%20Q8113_AI%20Machine%20Learning%20Analyst_V4%20Final.pdf"
+    },
+    {
+      "id": "nqr-14624",
+      "tracks": [
+        "data-ai"
+      ],
+      "title": "Business Intelligence Analyst",
+      "code": "QG-05-IT-045942025-V2-NASSCOM",
+      "level": 5,
+      "sector": "IT-ITeS",
+      "awardingBody": "IT-ITeS Sector Skills Council NASSCOM (SSC NASSCOM)",
+      "certifyingBody": "IT-ITeS SSC NASSCOM",
+      "occupation": "Artificial Intelligence and Big Data Analytics",
+      "notionalHours": 480,
+      "approvedOn": "2018-12-19",
+      "validTill": "2028-10-07",
+      "eligibility": [
+        {
+          "criteria": "UG Diploma Completed",
+          "experience": "No Experience"
+        },
+        {
+          "criteria": "3 year Diploma after 10th Completed",
+          "experience": "1.5 Years"
+        },
+        {
+          "criteria": "Previous NSQF qualification of Level 4.5",
+          "experience": "1.5 Years"
+        }
+      ],
+      "units": [
+        {
+          "code": "SSC/N8157",
+          "title": "Collect & process data and ensure data quality standards are achieved",
+          "hours": 120,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N8127",
+          "title": "Collect and define business requirements by interacting with clients",
+          "hours": 60,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N8103",
+          "title": "Perform exploratory and Inferential analysis of the data",
+          "hours": 120,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N8108",
+          "title": "Define business outcomes and create visualizations from results of the analysis",
+          "hours": 120,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "DGT/VSQ/N0102",
+          "title": "Employability Skill (60 Hours)",
+          "hours": 60,
+          "mandatory": true,
+          "core": false
+        }
+      ],
+      "url": "https://www.nqr.gov.in/qualifications/14624",
+      "fileUrl": "https://www.nqr.gov.in/qualification/file/SSC%20Q8102_Business%20Intelligence%20Analyst_V4%20Final.pdf"
+    },
+    {
+      "id": "nqr-12124",
+      "tracks": [
+        "data-ai"
+      ],
+      "title": "AI-Business Analyst",
+      "code": "IT QG-5.5-IT-02637-2024-V1-ITDA",
+      "level": 5.5,
+      "sector": "IT-ITeS",
+      "awardingBody": "IT-ITeS Sector Skills Council NASSCOM (SSC NASSCOM)",
+      "certifyingBody": "IT-ITeS SSC NASSCOM",
+      "occupation": "Artificial Intelligence and Big Data Analytics",
+      "notionalHours": 540,
+      "approvedOn": "2024-05-30",
+      "validTill": "2027-05-30",
+      "eligibility": [
+        {
+          "criteria": "Pursuing 3rd year of 3-year/ 4-years UG Pursuing",
+          "experience": "No Experience"
+        },
+        {
+          "criteria": "Completed 3rd year of 3-year/ 4-years UG Completed",
+          "experience": "1.5 Years"
+        },
+        {
+          "criteria": "Diploma Completed",
+          "experience": "4.5 Years"
+        }
+      ],
+      "units": [
+        {
+          "code": "SSC/N8151",
+          "title": "Business Analysis for AI",
+          "hours": 90,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N8150",
+          "title": "AI Solution development & implementation",
+          "hours": 270,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "DGT/VSQ/N0102",
+          "title": "Employability Skill (60 Hours)",
+          "hours": 60,
+          "mandatory": true,
+          "core": false
+        },
+        {
+          "code": "SSC/N9014",
+          "title": "Maintain an inclusive, environmentally sustainable workplace",
+          "hours": 30,
+          "mandatory": true,
+          "core": false
+        },
+        {
+          "code": "-",
+          "title": "OJT",
+          "hours": 90,
+          "mandatory": true,
+          "core": false
+        }
+      ],
+      "url": "https://www.nqr.gov.in/qualifications/12124",
+      "fileUrl": "https://www.nqr.gov.in/qualification/file/QF_SSC%20Q8121_AI%20Business%20Analyst.pdf"
+    },
+    {
+      "id": "nqr-14625",
+      "tracks": [
+        "data-ai"
+      ],
+      "title": "Data Scientist",
+      "code": "QG-06-IT-045952025-V2-NASSCOM",
+      "level": 6,
+      "sector": "IT-ITeS",
+      "awardingBody": "IT-ITeS Sector Skills Council NASSCOM (SSC NASSCOM)",
+      "certifyingBody": "IT-ITeS SSC NASSCOM",
+      "occupation": "Artificial Intelligence and Big Data Analytics",
+      "notionalHours": 630,
+      "approvedOn": "2018-12-19",
+      "validTill": "2028-10-07",
+      "eligibility": [
+        {
+          "criteria": "UG 4th year Completed",
+          "experience": "No Experience"
+        },
+        {
+          "criteria": "3 year UG degree Completed",
+          "experience": "1.5 Years"
+        },
+        {
+          "criteria": "Previous NSQF qualification of Level 5.5",
+          "experience": "1.5 Years"
+        }
+      ],
+      "units": [
+        {
+          "code": "SSC/N8157",
+          "title": "Collect & process data and ensure data quality standards are achieved",
+          "hours": 120,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N8103",
+          "title": "Perform exploratory and Inferential analysis of the data",
+          "hours": 120,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N8104",
+          "title": "Perform research, design & validation of algorithmic models",
+          "hours": 150,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N8106",
+          "title": "Risk Analysis & Mitigation for Algorithmic Models",
+          "hours": 60,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N8108",
+          "title": "Define business outcomes and create visualizations from results of the analysis",
+          "hours": 120,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "DGT/VSQ/N0102",
+          "title": "Employability Skills (60 Hours)",
+          "hours": 60,
+          "mandatory": true,
+          "core": false
+        }
+      ],
+      "url": "https://www.nqr.gov.in/qualifications/14625",
+      "fileUrl": "https://www.nqr.gov.in/qualification/file/SSC%20Q8104_Data%20Scientist_V4%20Final.pdf"
+    },
+    {
+      "id": "nqr-13583",
+      "tracks": [
+        "infra"
+      ],
+      "title": "IT Technical Support Associate",
+      "code": "QG-04-IT-03648-2025-V2-NASSCOM",
+      "level": 4,
+      "sector": "IT-ITeS",
+      "awardingBody": "IT-ITeS Sector Skills Council NASSCOM (SSC NASSCOM)",
+      "certifyingBody": "IT-ITeS Sector Skills Council NASSCOM (SSC NASSCOM)",
+      "occupation": "IT Support Services/Helpdesk",
+      "notionalHours": 390,
+      "approvedOn": "2015-05-19",
+      "validTill": "2028-02-28",
+      "eligibility": [
+        {
+          "criteria": "12th Passed",
+          "experience": "No Experience"
+        },
+        {
+          "criteria": "10th Passed",
+          "experience": "1.5 Years"
+        },
+        {
+          "criteria": "Previous NSQF qualification of Level 3",
+          "experience": "3 years"
+        }
+      ],
+      "units": [
+        {
+          "code": "SSC/N0101",
+          "title": "Deal remotely with basic IT service requests/incidents",
+          "hours": 180,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N0108",
+          "title": "Manage IT Service Requests and Incident Resolution",
+          "hours": 180,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "DGT/VSQ/N0101",
+          "title": "Employability Skills (30 Hours)",
+          "hours": 30,
+          "mandatory": true,
+          "core": false
+        }
+      ],
+      "url": "https://www.nqr.gov.in/qualifications/13583",
+      "fileUrl": "https://www.nqr.gov.in/qualification/file/Qfile_IT%20Technical%20Support%20Associate_v4.0.pdf"
+    },
+    {
+      "id": "nqr-13563",
+      "tracks": [
+        "infra"
+      ],
+      "title": "IT Technical Support Executive",
+      "code": "QG-04-IT-03647-2025-V2-NASSCOM",
+      "level": 4,
+      "sector": "IT-ITeS",
+      "awardingBody": "IT-ITeS Sector Skills Council NASSCOM (SSC NASSCOM)",
+      "certifyingBody": "IT-ITeS Sector Skills Council NASSCOM (SSC NASSCOM)",
+      "occupation": "Product Support",
+      "notionalHours": 510,
+      "approvedOn": "2015-05-19",
+      "validTill": "2028-02-18",
+      "eligibility": [
+        {
+          "criteria": "12th Passed",
+          "experience": "No Experience"
+        },
+        {
+          "criteria": "10th Passed",
+          "experience": "1.5 Years"
+        },
+        {
+          "criteria": "Previous NSQF qualification of Level 3",
+          "experience": "3 years"
+        }
+      ],
+      "units": [
+        {
+          "code": "SSC/N7202",
+          "title": "Assist and Support Customers with Basic IT and Service Queries",
+          "hours": 120,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "DGT/VSQ/N0101",
+          "title": "Employability Skills (30 Hours)",
+          "hours": 30,
+          "mandatory": true,
+          "core": false
+        },
+        {
+          "code": "SSC/N7301",
+          "title": "Incident and Request Management through Voice Support",
+          "hours": 180,
+          "mandatory": false,
+          "core": true
+        },
+        {
+          "code": "SSC/N7201",
+          "title": "Manage Basic IT Service Requests and Incidents Remotely- Non-Voice",
+          "hours": 180,
+          "mandatory": false,
+          "core": true
+        }
+      ],
+      "url": "https://www.nqr.gov.in/qualifications/13563",
+      "fileUrl": "https://www.nqr.gov.in/qualification/file/Qfile_IT%20Technical%20Support%20Executive%20Final.pdf"
+    },
+    {
+      "id": "nqr-14734",
+      "tracks": [
+        "infra"
+      ],
+      "title": "Cloud Application Developer",
+      "code": "QG-05-IT-045902025-V2-NASSCOM",
+      "level": 5,
+      "sector": "IT-ITeS",
+      "awardingBody": "IT-ITeS Sector Skills Council NASSCOM (SSC NASSCOM)",
+      "certifyingBody": "IT-ITeS Sector Skills Council NASSCOM (SSC NASSCOM)",
+      "occupation": "Cloud Computing",
+      "notionalHours": 510,
+      "approvedOn": "2022-07-28",
+      "validTill": "2028-10-07",
+      "eligibility": [
+        {
+          "criteria": "UG Diploma Completed",
+          "experience": "No Experience"
+        },
+        {
+          "criteria": "3 year Diploma after 10th Completed",
+          "experience": "1.5 Years"
+        },
+        {
+          "criteria": "Previous NSQF qualification of Level 4.5",
+          "experience": "1.5 Years"
+        }
+      ],
+      "units": [
+        {
+          "code": "SSC/N8323",
+          "title": "Monitor and manage cloud applications and the deployed systems",
+          "hours": 60,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N8322",
+          "title": "Package software for secure and successful deployment on the cloud",
+          "hours": 90,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N8321",
+          "title": "Migrate applications to utilize the full potential of the cloud platform",
+          "hours": 60,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N8320",
+          "title": "Develop and maintain secure, resilient and highly available cloud applications",
+          "hours": 90,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N8319",
+          "title": "Design the application architecture to ensure scalable, resilient, and fault-tolerant cloud applications",
+          "hours": 90,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N8318",
+          "title": "Develop functional and non-functional requirements for the defined scope of the application",
+          "hours": 60,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "DGT/VSQ/N0102",
+          "title": "Employability Skills (60 Hours)",
+          "hours": 60,
+          "mandatory": true,
+          "core": false
+        }
+      ],
+      "url": "https://www.nqr.gov.in/qualifications/14734",
+      "fileUrl": "https://www.nqr.gov.in/qualification/file/QFile_Cloud%20Application%20Developer_v4.0%20Final.pdf"
+    },
+    {
+      "id": "nqr-13183",
+      "tracks": [
+        "infra"
+      ],
+      "title": "Security Analyst",
+      "code": "QG-05-IT-03639-2025-V2-NASSCOM",
+      "level": 5,
+      "sector": "IT-ITeS",
+      "awardingBody": "IT-ITeS Sector Skills Council NASSCOM (SSC NASSCOM)",
+      "certifyingBody": "IT-ITeS SSC nasscom",
+      "occupation": "Information and Cyber Security",
+      "notionalHours": 480,
+      "approvedOn": "2015-07-20",
+      "validTill": "2028-02-18",
+      "eligibility": [
+        {
+          "criteria": "Previous NSQF qualification of Level 4",
+          "experience": "3 years"
+        },
+        {
+          "criteria": "3 year Diploma after 10th Completed",
+          "experience": "1.5 Years"
+        },
+        {
+          "criteria": "Completed 2nd year of 3-year/ 4-years UG Completed",
+          "experience": "No Experience"
+        }
+      ],
+      "units": [
+        {
+          "code": "SSC/N0954",
+          "title": "Monitor and Analyze Threats",
+          "hours": 150,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N0955",
+          "title": "Coordinate with team and respond to Incidents",
+          "hours": 120,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N0956",
+          "title": "Manage and Secure Cloud Data",
+          "hours": 90,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N0957",
+          "title": "Execute Phishing and Social Engineering Defense",
+          "hours": 60,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "DGT/VSQ/N0102",
+          "title": "Employability Skills (60 Hours)",
+          "hours": 60,
+          "mandatory": true,
+          "core": false
+        }
+      ],
+      "url": "https://www.nqr.gov.in/qualifications/13183",
+      "fileUrl": "https://www.nqr.gov.in/qualification/file/SSC%20Q0901_Security%20Analyst-V4.pdf"
+    },
+    {
+      "id": "nqr-13275",
+      "tracks": [
+        "infra"
+      ],
+      "title": "Security Operation Centre Analyst",
+      "code": "QG-05-IT-03638-2025-V2-NASSCOM",
+      "level": 5,
+      "sector": "IT-ITeS",
+      "awardingBody": "IT-ITeS Sector Skills Council NASSCOM (SSC NASSCOM)",
+      "certifyingBody": "IT-ITeS Sector Skills Council nasscom (SSC nasscom)",
+      "occupation": "Information and Cyber Security",
+      "notionalHours": 480,
+      "approvedOn": "2015-07-20",
+      "validTill": "2028-02-18",
+      "eligibility": [
+        {
+          "criteria": "Completed 2nd year of 3-year/ 4-years UG Completed",
+          "experience": "No Experience"
+        },
+        {
+          "criteria": "3rd Year of 3 Year Diploma after 10th Completed",
+          "experience": "1.5 Years"
+        },
+        {
+          "criteria": "Previous NSQF qualification of Level 4",
+          "experience": "3 years"
+        }
+      ],
+      "units": [
+        {
+          "code": "SSC/N0961",
+          "title": "Detect threats and monitor events using Sysinternal Tools",
+          "hours": 150,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N0962",
+          "title": "Analize security events and response to detected threats",
+          "hours": 150,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N0963",
+          "title": "Identify and response to cyber attack",
+          "hours": 120,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "DGT/VSQ/N0102",
+          "title": "Employability Skills (60 Hours)",
+          "hours": 60,
+          "mandatory": true,
+          "core": false
+        }
+      ],
+      "url": "https://www.nqr.gov.in/qualifications/13275",
+      "fileUrl": "https://www.nqr.gov.in/qualification/file/QFile_Security%20Operations%20Centre%20Analyst%20V4.pdf"
+    },
+    {
+      "id": "nqr-13600",
+      "tracks": [
+        "infra"
+      ],
+      "title": "Cloud Infrastructure Analyst",
+      "code": "QG-06-IT-03645-2025-V2-NASSCOM",
+      "level": 6,
+      "sector": "IT-ITeS",
+      "awardingBody": "IT-ITeS Sector Skills Council NASSCOM (SSC NASSCOM)",
+      "certifyingBody": "IT-ITeS Sector Skills Council NASSCOM (SSC NASSCOM)",
+      "occupation": "Cloud Computing",
+      "notionalHours": 600,
+      "approvedOn": "2019-08-22",
+      "validTill": "2028-02-18",
+      "eligibility": [
+        {
+          "criteria": "UG 3rd year Completed",
+          "experience": "1.5 Years"
+        },
+        {
+          "criteria": "UG 4th year Completed",
+          "experience": "No Experience"
+        },
+        {
+          "criteria": "Previous NSQF qualification of Level 5",
+          "experience": "3 years"
+        }
+      ],
+      "units": [
+        {
+          "code": "SSC/N8313",
+          "title": "Provision, configure, test, and deploy cloud infrastructure.",
+          "hours": 150,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N8314",
+          "title": "Maintain compute, network, and storage systems deployed on the cloud and ensure backup and recovery",
+          "hours": 90,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N8315",
+          "title": "Automate cloud infrastructure management",
+          "hours": 90,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N8316",
+          "title": "Migrate legacy/on-premises/cloud applications and data to new cloud platforms",
+          "hours": 90,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N8317",
+          "title": "Integrate cloud infrastructure with existing IT systems.",
+          "hours": 120,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "DGT/VSQ/N0102",
+          "title": "Employability Skills (60 Hours)",
+          "hours": 60,
+          "mandatory": true,
+          "core": false
+        }
+      ],
+      "url": "https://www.nqr.gov.in/qualifications/13600",
+      "fileUrl": "https://www.nqr.gov.in/qualification/file/Qfiles_SSC_Q8304_Cloud%20Infrastructure%20Analyst_V4.pdf"
+    },
+    {
+      "id": "nqr-14751",
+      "tracks": [
+        "infra"
+      ],
+      "title": "Information Security Analyst",
+      "code": "QG-06-IT-045892025-V2-NASSCOM",
+      "level": 6,
+      "sector": "IT-ITeS",
+      "awardingBody": "IT-ITeS Sector Skills Council NASSCOM (SSC NASSCOM)",
+      "certifyingBody": "IT-ITeS Sector Skills Council NASSCOM (SSC NASSCOM)",
+      "occupation": "Cybersecurity",
+      "notionalHours": 570,
+      "approvedOn": "2022-08-25",
+      "validTill": "2028-10-07",
+      "eligibility": [
+        {
+          "criteria": "UG 4th year Completed",
+          "experience": "No Experience"
+        },
+        {
+          "criteria": "3 year UG degree Completed",
+          "experience": "1.5 Years"
+        },
+        {
+          "criteria": "Previous NSQF qualification of Level 5.5",
+          "experience": "1.5 Years"
+        },
+        {
+          "criteria": "Previous NSQF qualification of Level 5",
+          "experience": "3 years"
+        }
+      ],
+      "units": [
+        {
+          "code": "SSC/N0939",
+          "title": "Develop and enhance cybersecurity infrastructure",
+          "hours": 150,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N0917",
+          "title": "Identify and report compliance issues with respect to cybersecurity",
+          "hours": 60,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N0918",
+          "title": "Maintain compliance to information security policies, regulations and standards and address risk issues",
+          "hours": 120,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N0933",
+          "title": "Monitor and report on the performance of operational and technical cybersecurity measures",
+          "hours": 120,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N0927",
+          "title": "Foster collaboration between various stakeholders to ensure cohesive cybersecurity practices across the organization",
+          "hours": 30,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N0936",
+          "title": "Make reports based on test results and making enhancements to existing security solutions",
+          "hours": 30,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "DGT/VSQ/N0102",
+          "title": "Employability Skills (60 Hours)",
+          "hours": 60,
+          "mandatory": true,
+          "core": false
+        }
+      ],
+      "url": "https://www.nqr.gov.in/qualifications/14751",
+      "fileUrl": "https://www.nqr.gov.in/qualification/file/SSC%20Q0923_Information%20Security%20analyst_V4%20Final.pdf"
+    },
+    {
+      "id": "nqr-14750",
+      "tracks": [
+        "infra"
+      ],
+      "title": "Network Security Engineer",
+      "code": "QG-06-IT-045872025-V2-NASSCOM",
+      "level": 6,
+      "sector": "IT-ITeS",
+      "awardingBody": "IT-ITeS Sector Skills Council NASSCOM (SSC NASSCOM)",
+      "certifyingBody": "IT-ITeS Sector Skills Council NASSCOM (SSC NASSCOM)",
+      "occupation": "Cybersecurity",
+      "notionalHours": 600,
+      "approvedOn": "2022-08-25",
+      "validTill": "2028-10-07",
+      "eligibility": [
+        {
+          "criteria": "UG 4th year Completed",
+          "experience": "No Experience"
+        },
+        {
+          "criteria": "Previous NSQF qualification of Level 5.5",
+          "experience": "1.5 Years"
+        },
+        {
+          "criteria": "Previous NSQF qualification of Level 5",
+          "experience": "3 years"
+        }
+      ],
+      "units": [
+        {
+          "code": "SSC/N0918",
+          "title": "Maintain compliance to information security policies, regulations and standards and address risk issues.",
+          "hours": 120,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N0922",
+          "title": "Conduct network security assessment and provide recommendations as per requirements",
+          "hours": 150,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N0923",
+          "title": "Carry out configuration review and provide recommendations to support in remediating the identified vulnerabilities",
+          "hours": 150,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N0925",
+          "title": "Test, run exploits to identify vulnerabilities in networks",
+          "hours": 90,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N0927",
+          "title": "Foster collaboration between various stakeholders to ensure cohesive cybersecurity practices across the organization",
+          "hours": 30,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "DGT/VSQ/N0102",
+          "title": "Employability Skills (60 Hours)",
+          "hours": 60,
+          "mandatory": true,
+          "core": false
+        }
+      ],
+      "url": "https://www.nqr.gov.in/qualifications/14750",
+      "fileUrl": "https://www.nqr.gov.in/qualification/file/SSC%20Q0917_Network%20Security%20Engineer_V4%20Final.pdf"
+    },
+    {
+      "id": "nqr-11229",
+      "tracks": [
+        "marketing"
+      ],
+      "title": "Graphic Designer Assistant",
+      "code": "QG-03-ME-02415-2024-V1-MSME",
+      "level": 3,
+      "sector": "Media & Entertainment",
+      "awardingBody": "MSME Technology Centre, Ministry of Micro Small And Medium Enterprises, New Delhi",
+      "certifyingBody": "MSME TECHNOLOGY CENTRE",
+      "occupation": "Graphic Design",
+      "notionalHours": 390,
+      "approvedOn": "2024-04-30",
+      "validTill": "2027-04-30",
+      "eligibility": [
+        {
+          "criteria": "10th Passed",
+          "experience": "No Experience"
+        }
+      ],
+      "units": [
+        {
+          "code": "MSME/GDA/01",
+          "title": "Basic Understanding of Concept Art",
+          "hours": 60,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "MSME/GDA/02",
+          "title": "Attain knowledge of Computer Illustrations",
+          "hours": 150,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "MSME/GDA/03",
+          "title": "Gain insight into Computer Graphics",
+          "hours": 150,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "MSME/ES/01",
+          "title": "Employability skills",
+          "hours": 30,
+          "mandatory": true,
+          "core": false
+        }
+      ],
+      "url": "https://www.nqr.gov.in/qualifications/11229",
+      "fileUrl": "https://www.nqr.gov.in/qualification/file/Graphic%20Designer%20Assistant_QF.pdf"
+    },
+    {
+      "id": "nqr-13278",
+      "tracks": [
+        "marketing"
+      ],
+      "title": "Multimedia Development Associate",
+      "code": "QG-03-IT-03509-2025-V2-NIELIT",
+      "level": 3,
+      "sector": "IT-ITeS",
+      "awardingBody": "National Institute of Electronics and Information Technology (NIELIT)",
+      "certifyingBody": "National Institute of Electronics and Information Technology (NIELIT)",
+      "occupation": "Multimedia Application Development",
+      "notionalHours": 330,
+      "approvedOn": "2025-02-18",
+      "validTill": "2028-02-18",
+      "eligibility": [
+        {
+          "criteria": "10th None",
+          "experience": "No Experience"
+        },
+        {
+          "criteria": "10th Passed",
+          "experience": "No Experience"
+        },
+        {
+          "criteria": "8th Passed",
+          "experience": "No Experience"
+        },
+        {
+          "criteria": "8th Passed",
+          "experience": "3 years"
+        },
+        {
+          "criteria": "Previous NSQF qualification of Level 2.5",
+          "experience": "1.5 Years"
+        },
+        {
+          "criteria": "Previous NSQF qualification of Level 2",
+          "experience": "3 years"
+        }
+      ],
+      "units": [
+        {
+          "code": "NIE/SSC/N0601",
+          "title": "Learn Image Editing & Graphic Designing Techniques",
+          "hours": 60,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "NIE/SSC/N0602",
+          "title": "Audio Editing Techniques using open source tools",
+          "hours": 30,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "NIE/SSC/N0603",
+          "title": "Create Movie clips using 2D Animation Techniques",
+          "hours": 30,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "NIE/SSC/N0604",
+          "title": "Apply Video Editing and Special Effects in Multimedia Presentations",
+          "hours": 30,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "NIE/SSC/N0605",
+          "title": "Animate Characters and Environments using, 3D Animation Techniques",
+          "hours": 60,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "NIE/SSC/N0606",
+          "title": "Design Websites using open source tools",
+          "hours": 60,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "DGT/VSQ/N0101",
+          "title": "Employability Skills",
+          "hours": 30,
+          "mandatory": true,
+          "core": false
+        },
+        {
+          "code": "NIE/SSC/N0607",
+          "title": "Implementation of Multimedia project in virtual environment/ OJT",
+          "hours": 30,
+          "mandatory": true,
+          "core": false
+        }
+      ],
+      "url": "https://www.nqr.gov.in/qualifications/13278",
+      "fileUrl": "https://www.nqr.gov.in/qualification/file/QF_Multimedia%20Development%20Associate.pdf"
+    },
+    {
+      "id": "nqr-2688",
+      "tracks": [
+        "marketing"
+      ],
+      "title": "Search Engine Marketing Executive",
+      "code": "2022/ME/MESC/05443",
+      "level": 4,
+      "sector": "Media & Entertainment",
+      "awardingBody": "Media & Entertainment Skill Council (MESC)",
+      "certifyingBody": "Media & Entertainment Skills Council",
+      "occupation": "Marketing, Ad Sales, Traffic",
+      "notionalHours": 540,
+      "approvedOn": "2022-02-24",
+      "validTill": "2027-02-23",
+      "eligibility": [
+        {
+          "criteria": "2 year Diploma after 10th Completed",
+          "experience": "1 year"
+        },
+        {
+          "criteria": "12th Passed",
+          "experience": "1 year"
+        },
+        {
+          "criteria": "10th Passed",
+          "experience": "3 years"
+        }
+      ],
+      "units": [
+        {
+          "code": "Intro",
+          "title": "Introduction",
+          "hours": 60,
+          "mandatory": true,
+          "core": false
+        },
+        {
+          "code": "MES/N0721",
+          "title": "Research and identify target keywords",
+          "hours": 90,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "MES/N0722",
+          "title": "Set-up pay-per-click (PPC) campaigns",
+          "hours": 120,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "MES/N0723",
+          "title": "Track campaign performance and prepare reports",
+          "hours": 90,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "MES/N0104",
+          "title": "Maintain workplace health and safety",
+          "hours": 60,
+          "mandatory": true,
+          "core": false
+        },
+        {
+          "code": "DGT/VSQ/N0102",
+          "title": "Employability Skills",
+          "hours": 60,
+          "mandatory": true,
+          "core": false
+        },
+        {
+          "code": "OJT",
+          "title": "OJT",
+          "hours": 60,
+          "mandatory": true,
+          "core": false
+        }
+      ],
+      "url": "https://www.nqr.gov.in/qualifications/2688",
+      "fileUrl": "https://www.nqr.gov.in/qualification/file/NSQF_Search_Engine_Marketing_Executive.pdf"
+    },
+    {
+      "id": "nqr-2694",
+      "tracks": [
+        "marketing"
+      ],
+      "title": "Search Engine Optimization Executive",
+      "code": "2022/ME/MESC/05442",
+      "level": 4,
+      "sector": "Media & Entertainment",
+      "awardingBody": "Media & Entertainment Skill Council (MESC)",
+      "certifyingBody": "Media & Entertainment Skills Council",
+      "occupation": "Marketing / Advertising Sales / Traffic",
+      "notionalHours": 540,
+      "approvedOn": "2022-02-24",
+      "validTill": "2027-02-23",
+      "eligibility": [
+        {
+          "criteria": "12th Passed",
+          "experience": "1 year"
+        },
+        {
+          "criteria": "2 year Diploma after 10th Completed",
+          "experience": "1 year"
+        },
+        {
+          "criteria": "10th Passed",
+          "experience": "3 years"
+        }
+      ],
+      "units": [
+        {
+          "code": "Intro",
+          "title": "Introduction",
+          "hours": 60,
+          "mandatory": true,
+          "core": false
+        },
+        {
+          "code": "MES/N0717",
+          "title": "Research and create list of keywords",
+          "hours": 60,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "MES/N0718",
+          "title": "Implement on-page optimization",
+          "hours": 60,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "MES/N0719",
+          "title": "Implement off-page optimization",
+          "hours": 120,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "MES/N0720",
+          "title": "Track rankings and prepare reports",
+          "hours": 60,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "MES/N0104",
+          "title": "Maintain Workplace Health and Safety",
+          "hours": 60,
+          "mandatory": true,
+          "core": false
+        },
+        {
+          "code": "DGT/VSQ/N0102",
+          "title": "Employability Skills",
+          "hours": 60,
+          "mandatory": true,
+          "core": false
+        },
+        {
+          "code": "OJT",
+          "title": "OJT",
+          "hours": 60,
+          "mandatory": true,
+          "core": false
+        }
+      ],
+      "url": "https://www.nqr.gov.in/qualifications/2694",
+      "fileUrl": "https://www.nqr.gov.in/qualification/file/NSQF_Search_Engine_Optimization_Executive%20%20%20.pdf"
+    },
+    {
+      "id": "nqr-2689",
+      "tracks": [
+        "marketing"
+      ],
+      "title": "Social Media Executive",
+      "code": "2022/ME/MESC/05444",
+      "level": 4,
+      "sector": "Media & Entertainment",
+      "awardingBody": "Media & Entertainment Skill Council (MESC)",
+      "certifyingBody": "Media & Entertainment Skills Council",
+      "occupation": "Marketing / Ad Sales/ Traffic",
+      "notionalHours": 510,
+      "approvedOn": "2022-02-24",
+      "validTill": "2027-02-23",
+      "eligibility": [
+        {
+          "criteria": "12th Passed",
+          "experience": "1 year"
+        },
+        {
+          "criteria": "2 year Diploma after 10th Completed",
+          "experience": "1 year"
+        },
+        {
+          "criteria": "10th Passed",
+          "experience": "3 years"
+        }
+      ],
+      "units": [
+        {
+          "code": "Intro",
+          "title": "Introduction",
+          "hours": 30,
+          "mandatory": true,
+          "core": false
+        },
+        {
+          "code": "MES/N0707",
+          "title": "Create workflow for social media",
+          "hours": 60,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "MES/N0708",
+          "title": "Plan and organize work to meet expected outcome",
+          "hours": 60,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "MES/N0709",
+          "title": "Manage online tools",
+          "hours": 60,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "MES/N0710",
+          "title": "Design the content for social media",
+          "hours": 60,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "MES/N0711",
+          "title": "Implement the social media strategy",
+          "hours": 60,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "MES/N0104",
+          "title": "Maintain Workplace Health and Safety",
+          "hours": 60,
+          "mandatory": true,
+          "core": false
+        },
+        {
+          "code": "DGT/VSQ/N0102",
+          "title": "Employability Skills",
+          "hours": 60,
+          "mandatory": true,
+          "core": false
+        },
+        {
+          "code": "OJT",
+          "title": "OJT",
+          "hours": 60,
+          "mandatory": true,
+          "core": false
+        }
+      ],
+      "url": "https://www.nqr.gov.in/qualifications/2689",
+      "fileUrl": "https://www.nqr.gov.in/qualification/file/NSQF_Social_Media_Executive.pdf"
+    },
+    {
+      "id": "nqr-2701",
+      "tracks": [
+        "marketing"
+      ],
+      "title": "Social Media Manager",
+      "code": "2022/ME/MESC/05445",
+      "level": 5,
+      "sector": "Media & Entertainment",
+      "awardingBody": "Media & Entertainment Skill Council (MESC)",
+      "certifyingBody": "Media & Entertainment Skills Council",
+      "occupation": "Marketing/ Ad Sales / Traffic",
+      "notionalHours": 540,
+      "approvedOn": "2022-02-24",
+      "validTill": "2027-02-23",
+      "eligibility": [
+        {
+          "criteria": "UG Completed",
+          "experience": "1 year"
+        },
+        {
+          "criteria": "PG Completed",
+          "experience": "No Experience"
+        },
+        {
+          "criteria": "3 year Diploma after 12th Completed",
+          "experience": "2 years"
+        },
+        {
+          "criteria": "UG Completed",
+          "experience": "2 years"
+        },
+        {
+          "criteria": "12th Passed",
+          "experience": "5 years"
+        },
+        {
+          "criteria": "Previous NSQF qualification of Level 5",
+          "experience": "3 years"
+        }
+      ],
+      "units": [
+        {
+          "code": "Intro",
+          "title": "Introduction",
+          "hours": 30,
+          "mandatory": true,
+          "core": false
+        },
+        {
+          "code": "MES/N0712",
+          "title": "Develop social media strategy",
+          "hours": 90,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "MES/N0713",
+          "title": "Plan social media strategy",
+          "hours": 90,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "MES/N0714",
+          "title": "Prepare and manage the budget",
+          "hours": 90,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "MES/N0715",
+          "title": "Prepare MIS and analytical report for social media",
+          "hours": 90,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "MES/N0716",
+          "title": "Manage a team",
+          "hours": 60,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "MES/N0104",
+          "title": "Maintain Workplace Health and Safety",
+          "hours": 30,
+          "mandatory": true,
+          "core": false
+        },
+        {
+          "code": "DGT/VSQ/N0102",
+          "title": "Employability Skills",
+          "hours": 60,
+          "mandatory": true,
+          "core": false
+        }
+      ],
+      "url": "https://www.nqr.gov.in/qualifications/2701",
+      "fileUrl": "https://www.nqr.gov.in/qualification/file/NSQF_Socia_Media_Manager.pdf"
+    },
+    {
+      "id": "nqr-2671",
+      "tracks": [
+        "marketing"
+      ],
+      "title": "Digital Marketing Manager",
+      "code": "2022/ME/MESC/05446",
+      "level": 6,
+      "sector": "Media & Entertainment",
+      "awardingBody": "Media & Entertainment Skill Council (MESC)",
+      "certifyingBody": "Media & Entertainment Skills Council",
+      "occupation": "Marketing / Advertising Sales / Traffic",
+      "notionalHours": 840,
+      "approvedOn": "2022-02-24",
+      "validTill": "2027-02-23",
+      "eligibility": [
+        {
+          "criteria": "3 year Diploma after 12th Completed",
+          "experience": "3 years"
+        },
+        {
+          "criteria": "Previous NSQF qualification of Level 5",
+          "experience": "2 years"
+        },
+        {
+          "criteria": "UG Completed",
+          "experience": "3 years"
+        },
+        {
+          "criteria": "UG Completed",
+          "experience": "1 year"
+        },
+        {
+          "criteria": "PG Completed",
+          "experience": "No Experience"
+        }
+      ],
+      "units": [
+        {
+          "code": "Intro",
+          "title": "Introduction",
+          "hours": 60,
+          "mandatory": true,
+          "core": false
+        },
+        {
+          "code": "MES/N0724",
+          "title": "Develop a digital marketing strategy",
+          "hours": 180,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "MES/N0725",
+          "title": "Plan and conduct digital marketing campaigns",
+          "hours": 180,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "MES/N0726",
+          "title": "Optimize campaign’s performance and expenditure",
+          "hours": 120,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "MES/N0727",
+          "title": "Measure and report the performance of digital marketing campaigns",
+          "hours": 120,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "MES/N0728",
+          "title": "Manage a team of marketing executives and their performance",
+          "hours": 60,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "MES/N0104",
+          "title": "Maintain Workplace Health and Safety",
+          "hours": 60,
+          "mandatory": true,
+          "core": false
+        },
+        {
+          "code": "DGT/VSQ/N0102",
+          "title": "Employability Skills",
+          "hours": 60,
+          "mandatory": true,
+          "core": false
+        }
+      ],
+      "url": "https://www.nqr.gov.in/qualifications/2671",
+      "fileUrl": "https://www.nqr.gov.in/qualification/file/NSQF_Digital_Marketing_Manager.pdf"
+    },
+    {
+      "id": "nqr-13450",
+      "tracks": [
+        "software",
+        "data-ai",
+        "infra"
+      ],
+      "title": "Digital Mitra",
+      "code": "QG-03-IT-03665-2025-V2-NASSCOM",
+      "level": 3,
+      "sector": "IT-ITeS",
+      "awardingBody": "IT-ITeS Sector Skills Council NASSCOM (SSC NASSCOM)",
+      "certifyingBody": "IT-ITeS Sector Skills Council NASSCOM (SSC NASSCOM)",
+      "occupation": "Customer Relationship Management (CRM)",
+      "notionalHours": 270,
+      "approvedOn": "2015-05-19",
+      "validTill": "2028-02-18",
+      "eligibility": [
+        {
+          "criteria": "12th Completed",
+          "experience": "No Experience"
+        },
+        {
+          "criteria": "10th Completed",
+          "experience": "1.5 Years"
+        },
+        {
+          "criteria": "Previous NSQF qualification of Level 2",
+          "experience": "3 years"
+        }
+      ],
+      "units": [
+        {
+          "code": "SSC/N2204",
+          "title": "Introduction to Office Suite and Computer System applications",
+          "hours": 60,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N2205",
+          "title": "Digital Handling, MIS and Troubleshooting Essentials",
+          "hours": 90,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N2206",
+          "title": "Introduction to Digital Security and Customer-Centric Services",
+          "hours": 60,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N2207",
+          "title": "Digital Data Management and AI-driven Process Optimization",
+          "hours": 30,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "DGT/VSQ/N0101",
+          "title": "Employability Skills (30 Hrs)",
+          "hours": 30,
+          "mandatory": true,
+          "core": false
+        }
+      ],
+      "url": "https://www.nqr.gov.in/qualifications/13450",
+      "fileUrl": "https://www.nqr.gov.in/qualification/file/QFile_Digital%20Mitra%2000.pdf"
+    },
+    {
+      "id": "nqr-14250",
+      "tracks": [
+        "software"
+      ],
+      "title": "Full Stack Development Associate",
+      "code": "QG-04-IT-04172-2025-V2-NIELIT",
+      "level": 4,
+      "sector": "IT-ITeS",
+      "awardingBody": "National Institute of Electronics and Information Technology (NIELIT)",
+      "certifyingBody": "National Institute of Electronics and Information Technology (NIELIT)",
+      "occupation": "Web Development",
+      "notionalHours": 390,
+      "approvedOn": "2025-05-08",
+      "validTill": "2028-05-08",
+      "eligibility": [
+        {
+          "criteria": "12th Passed",
+          "experience": "No Experience"
+        },
+        {
+          "criteria": "10th Passed",
+          "experience": "3 years"
+        },
+        {
+          "criteria": "Previous NSQF qualification of Level 3.5",
+          "experience": "1.5 Years"
+        }
+      ],
+      "units": [
+        {
+          "code": "NIE/ITS/N0705",
+          "title": "Design and Development of Front-End Application and managing and maintaining web source code",
+          "hours": 120,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "NIE/ITS/N0702",
+          "title": "Implementation of Backend Python programming (functional and OOPs)",
+          "hours": 90,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "NIE/ITS/N0703",
+          "title": "Database connectivity with MySQL and Dynamic Web Application Development using Django and Front-end Technologies(HTML/CSS/ JavaScripts/Bootstrap)",
+          "hours": 90,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "DGT/VSQ/N0101",
+          "title": "Employability Skills",
+          "hours": 30,
+          "mandatory": true,
+          "core": false
+        },
+        {
+          "code": "NIE/SSC/N0705",
+          "title": "OJT/Project",
+          "hours": 60,
+          "mandatory": true,
+          "core": false
+        }
+      ],
+      "url": "https://www.nqr.gov.in/qualifications/14250",
+      "fileUrl": "https://www.nqr.gov.in/qualification/file/QF_Full%20Stake%20Development%20Associate.pdf"
+    },
+    {
+      "id": "nqr-13499",
+      "tracks": [
+        "software"
+      ],
+      "title": "Software Test Engineer",
+      "code": "QG-04-IT-03652-2025-V2-NASSCOM",
+      "level": 4,
+      "sector": "IT-ITeS",
+      "awardingBody": "IT-ITeS Sector Skills Council NASSCOM (SSC NASSCOM)",
+      "certifyingBody": "IT-ITeS Sector Skills Council NASSCOM (SSC NASSCOM)",
+      "occupation": "Testing and Quality Assurance",
+      "notionalHours": 450,
+      "approvedOn": "2022-01-27",
+      "validTill": "2028-02-18",
+      "eligibility": [
+        {
+          "criteria": "12th Passed",
+          "experience": "No Experience"
+        },
+        {
+          "criteria": "10th Passed",
+          "experience": "1.5 Years"
+        },
+        {
+          "criteria": "Previous NSQF qualification of Level 3",
+          "experience": "3 years"
+        }
+      ],
+      "units": [
+        {
+          "code": "SSC/N4801",
+          "title": "Develop Test Plans for Software Products/ Applications/Modules",
+          "hours": 90,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "DGT/VSQ/N0102",
+          "title": "Employability Skills (60 Hours)",
+          "hours": 60,
+          "mandatory": true,
+          "core": false
+        },
+        {
+          "code": "SSC/N4802",
+          "title": "Perform Automated Testing on Software Products/Applications/Modules",
+          "hours": 150,
+          "mandatory": false,
+          "core": true
+        },
+        {
+          "code": "SSC/N4803",
+          "title": "Perform Manual Testing on Software Products/Applications/Modules",
+          "hours": 150,
+          "mandatory": false,
+          "core": true
+        }
+      ],
+      "url": "https://www.nqr.gov.in/qualifications/13499",
+      "fileUrl": "https://www.nqr.gov.in/qualification/file/Qfile_Software%20Test%20Engineer.pdf"
+    },
+    {
+      "id": "nqr-13531",
+      "tracks": [
+        "software"
+      ],
+      "title": "Web Developer",
+      "code": "QG-04-IT-03650-2025-V2-NASSCOM",
+      "level": 4,
+      "sector": "IT-ITeS",
+      "awardingBody": "IT-ITeS Sector Skills Council NASSCOM (SSC NASSCOM)",
+      "certifyingBody": "IT-ITeS Sector Skills Council NASSCOM (SSC NASSCOM)",
+      "occupation": "Application Development",
+      "notionalHours": 360,
+      "approvedOn": "2025-02-18",
+      "validTill": "2028-02-18",
+      "eligibility": [
+        {
+          "criteria": "12th Passed",
+          "experience": "No Experience"
+        },
+        {
+          "criteria": "10th Passed",
+          "experience": "3 years"
+        },
+        {
+          "criteria": "Previous NSQF qualification of Level 3",
+          "experience": "3 years"
+        }
+      ],
+      "units": [
+        {
+          "code": "SSC/N0501",
+          "title": "Contribute to the design of software products and applications",
+          "hours": 120,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N0503",
+          "title": "Develop Media Content and Graphics for Software Products and Applications",
+          "hours": 210,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "DGT/VSQ/N0101",
+          "title": "Employability Skills (30 Hours)",
+          "hours": 30,
+          "mandatory": true,
+          "core": false
+        }
+      ],
+      "url": "https://www.nqr.gov.in/qualifications/13531",
+      "fileUrl": "https://www.nqr.gov.in/qualification/file/Qfile_Web%20Developer_v4.0.pdf"
+    },
+    {
+      "id": "nqr-10922",
+      "tracks": [
+        "software"
+      ],
+      "title": "Full-Stack Developer",
+      "code": "QG-4.5-IT-02395-2024-V1-MSME",
+      "level": 4.5,
+      "sector": "IT-ITeS",
+      "awardingBody": "MSME Technology Centre, Ministry of Micro Small And Medium Enterprises, New Delhi",
+      "certifyingBody": "MSME TECHNOLOGY CENTER",
+      "occupation": "Software Developer",
+      "notionalHours": 600,
+      "approvedOn": "2024-04-30",
+      "validTill": "2027-04-30",
+      "eligibility": [
+        {
+          "criteria": "3 year Diploma after 10th Pursuing",
+          "experience": "No Experience"
+        },
+        {
+          "criteria": "3 year Diploma after 10th Completed",
+          "experience": "No Experience"
+        },
+        {
+          "criteria": "UG Pursuing",
+          "experience": "No Experience"
+        }
+      ],
+      "units": [
+        {
+          "code": "MSME/FSD/01",
+          "title": "Understanding the Concepts of C and Python Programming",
+          "hours": 60,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "MSME/FSD/02",
+          "title": "Gaining knowledge in Oracle and MySQL Database Management System",
+          "hours": 90,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "MSME/FSD/03",
+          "title": "Working Back-End design with Spring Boot & Hibernate Framework",
+          "hours": 210,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "MSME/FSD/04",
+          "title": "Mastering UI design with Angular",
+          "hours": 60,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "MSME/FSD/05",
+          "title": "Deploying & Hosting Application with Docker & Kubernetes",
+          "hours": 90,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "MSME/ES/01",
+          "title": "Employability Skill",
+          "hours": 30,
+          "mandatory": true,
+          "core": false
+        }
+      ],
+      "url": "https://www.nqr.gov.in/qualifications/10922",
+      "fileUrl": "https://www.nqr.gov.in/qualification/file/FULL-STACK%20DEVELOPER_QF.pdf"
+    },
+    {
+      "id": "nqr-13488",
+      "tracks": [
+        "software"
+      ],
+      "title": "Application Developer - Web & Mobile",
+      "code": "QG-05-IT-03642-2025-V2-NASSCOM",
+      "level": 5,
+      "sector": "IT-ITeS",
+      "awardingBody": "IT-ITeS Sector Skills Council NASSCOM (SSC NASSCOM)",
+      "certifyingBody": "IT-ITeS Sector Skills Council NASSCOM (SSC NASSCOM)",
+      "occupation": "Web & Mobile Development",
+      "notionalHours": 540,
+      "approvedOn": "2020-06-25",
+      "validTill": "2028-05-18",
+      "eligibility": [
+        {
+          "criteria": "Completed 2nd year of 3-year/ 4-years UG Completed",
+          "experience": "No Experience"
+        },
+        {
+          "criteria": "3rd Year of 3 Year Diploma after 10th Completed",
+          "experience": "1.5 Years"
+        },
+        {
+          "criteria": "Previous NSQF qualification of Level 4",
+          "experience": "3 years"
+        }
+      ],
+      "units": [
+        {
+          "code": "SSC/N8417",
+          "title": "Implement DevSecOps practices for secure application development",
+          "hours": 90,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N8451",
+          "title": "Implement Continuous Integration and Continuous Deployment (CI/CD) practices",
+          "hours": 60,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N8125",
+          "title": "Develop tests or simulations for end-to-end QA of systems",
+          "hours": 60,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N8418",
+          "title": "Fix application bugs and improve application performance",
+          "hours": 30,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N8323",
+          "title": "Monitor and manage cloud applications and the deployed systems",
+          "hours": 30,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N8452",
+          "title": "Optimize Revenue, Security, and Accessibility in Web and Mobile Products",
+          "hours": 30,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "-",
+          "title": "Employability Skills (60 Hours)",
+          "hours": 60,
+          "mandatory": true,
+          "core": false
+        },
+        {
+          "code": "SSC/N8414",
+          "title": "Develop a user-friendly web app aligned with functional, non-functional, and UX requirements",
+          "hours": 60,
+          "mandatory": false,
+          "core": true
+        },
+        {
+          "code": "SSC/N8415",
+          "title": "Develop native/cross-platform/hybrid mobile application for the target platforms",
+          "hours": 60,
+          "mandatory": false,
+          "core": true
+        },
+        {
+          "code": "SSC/N8416",
+          "title": "Develop reliable, scalable and secure back-end aligned to the application architecture",
+          "hours": 60,
+          "mandatory": false,
+          "core": true
+        }
+      ],
+      "url": "https://www.nqr.gov.in/qualifications/13488",
+      "fileUrl": "https://www.nqr.gov.in/qualification/file/Qfile_Application%20Developer%20-%20Web%20&%20Mobile.pdf"
+    },
+    {
+      "id": "nqr-13568",
+      "tracks": [
+        "software"
+      ],
+      "title": "Software Product Developer",
+      "code": "QG-05-IT-03651-2025-V2-NASSCOM",
+      "level": 5,
+      "sector": "IT-ITeS",
+      "awardingBody": "IT-ITeS Sector Skills Council NASSCOM (SSC NASSCOM)",
+      "certifyingBody": "IT-ITeS Sector Skills Council NASSCOM (SSC NASSCOM)",
+      "occupation": "Application Development",
+      "notionalHours": 480,
+      "approvedOn": "2015-06-18",
+      "validTill": "2028-02-18",
+      "eligibility": [
+        {
+          "criteria": "Completed 2nd year of 3-year/ 4-years UG Completed",
+          "experience": "No Experience"
+        },
+        {
+          "criteria": "3rd Year of 3 Year Diploma after 10th Completed",
+          "experience": "1.5 Years"
+        },
+        {
+          "criteria": "Previous NSQF qualification of Level 4",
+          "experience": "3 years"
+        }
+      ],
+      "units": [
+        {
+          "code": "SSC/N0514",
+          "title": "Develop and Design Software Products and Applications",
+          "hours": 180,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N0502",
+          "title": "Develop Software Code Based on Specifications",
+          "hours": 240,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "DGT/VSQ/N0102",
+          "title": "Employability Skills (60 Hours)",
+          "hours": 60,
+          "mandatory": true,
+          "core": false
+        }
+      ],
+      "url": "https://www.nqr.gov.in/qualifications/13568",
+      "fileUrl": "https://www.nqr.gov.in/qualification/file/Qfile_Software%20Product%20Developer.pdf"
+    },
+    {
+      "id": "nqr-13811",
+      "tracks": [
+        "software"
+      ],
+      "title": "Application Architect - Web & Mobile",
+      "code": "QG-06-IT-03644-2025-V2-NASSCOM",
+      "level": 6,
+      "sector": "IT-ITeS",
+      "awardingBody": "IT-ITeS Sector Skills Council NASSCOM (SSC NASSCOM)",
+      "certifyingBody": "IT-ITeS Sector Skills Council NASSCOM (SSC NASSCOM)",
+      "occupation": "Web & Mobile",
+      "notionalHours": 600,
+      "approvedOn": "2020-06-25",
+      "validTill": "2028-02-18",
+      "eligibility": [
+        {
+          "criteria": "4 year UG degree Completed",
+          "experience": "No Experience"
+        },
+        {
+          "criteria": "3 year UG degree Completed",
+          "experience": "1.5 Years"
+        },
+        {
+          "criteria": "Previous NSQF qualification of Level 5",
+          "experience": "3 years"
+        }
+      ],
+      "units": [
+        {
+          "code": "SSC/N8407",
+          "title": "Define best practices, checklist, reference implementations for application design and development",
+          "hours": 60,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N8306",
+          "title": "Translate business-level use cases into technical requirements and specifications",
+          "hours": 60,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N8410",
+          "title": "Define parameters and tools to monitor and manage application performance",
+          "hours": 60,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N8411",
+          "title": "Ensure compliance of regulatory standards, best practices and policies in software development across the organization",
+          "hours": 60,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N8452",
+          "title": "Optimize Revenue, Security, and Accessibility in Web and Mobile Products",
+          "hours": 30,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "DGT/VSQ/N0102",
+          "title": "Employability Skills (60 Hours)",
+          "hours": 60,
+          "mandatory": true,
+          "core": false
+        },
+        {
+          "code": "SSC/N8408",
+          "title": "Define the architecture for the web-based solution",
+          "hours": 90,
+          "mandatory": false,
+          "core": true
+        },
+        {
+          "code": "SSC/N8412",
+          "title": "Define security architecture and security controls to ensure security of the web-based solution",
+          "hours": 60,
+          "mandatory": false,
+          "core": true
+        },
+        {
+          "code": "SSC/N8409",
+          "title": "Define the architecture for the mobile-based solution",
+          "hours": 60,
+          "mandatory": false,
+          "core": true
+        },
+        {
+          "code": "SSC/N8413",
+          "title": "Define security architecture and security controls to ensure security of the mobile application/solution",
+          "hours": 60,
+          "mandatory": false,
+          "core": true
+        }
+      ],
+      "url": "https://www.nqr.gov.in/qualifications/13811",
+      "fileUrl": "https://www.nqr.gov.in/qualification/file/Qfile_Application%20Architect%20-%20Web%20&%20Mobile.pdf"
+    },
+    {
+      "id": "nqr-13685",
+      "tracks": [
+        "software"
+      ],
+      "title": "Product Manager- Web & Mobile",
+      "code": "QG-06-IT-03643-2025-V2-NASSCOM",
+      "level": 6,
+      "sector": "IT-ITeS",
+      "awardingBody": "IT-ITeS Sector Skills Council NASSCOM (SSC NASSCOM)",
+      "certifyingBody": "IT-ITeS Sector Skills Council NASSCOM (SSC NASSCOM)",
+      "occupation": "Web & Mobile",
+      "notionalHours": 540,
+      "approvedOn": "2020-06-25",
+      "validTill": "2028-02-18",
+      "eligibility": [
+        {
+          "criteria": "4 year UG degree Completed",
+          "experience": "No Experience"
+        },
+        {
+          "criteria": "3 year UG degree Completed",
+          "experience": "1.5 Years"
+        },
+        {
+          "criteria": "Previous NSQF qualification of Level 5",
+          "experience": "3 years"
+        }
+      ],
+      "units": [
+        {
+          "code": "SSC/N8401",
+          "title": "Define product/solution strategy and oversee development lifecycle",
+          "hours": 90,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N8127",
+          "title": "Collect and define business requirements through client interaction",
+          "hours": 90,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N8402",
+          "title": "Finalize the MVP based on defined business requirements",
+          "hours": 90,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N8403",
+          "title": "Define KPIs to monitor software performance, adoption, usability, and conversion",
+          "hours": 60,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N8404",
+          "title": "Define a go-to-market strategy for the product/solution",
+          "hours": 30,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N8405",
+          "title": "Define a customer engagement and retention strategy",
+          "hours": 30,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N8406",
+          "title": "Create and execute a project charter and monitor the project KPIs",
+          "hours": 30,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N9011",
+          "title": "Manage team performance to achieve project goals",
+          "hours": 30,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "SSC/N8452",
+          "title": "Optimize Revenue, Security, and Accessibility in Web and Mobile Products",
+          "hours": 30,
+          "mandatory": true,
+          "core": true
+        },
+        {
+          "code": "DGT/VSQ/N0102",
+          "title": "Employability Skills (60 Hours",
+          "hours": 60,
+          "mandatory": true,
+          "core": false
+        }
+      ],
+      "url": "https://www.nqr.gov.in/qualifications/13685",
+      "fileUrl": "https://www.nqr.gov.in/qualification/file/Qfile_Product%20Manager%20-%20Web%20&%20Mobile.pdf"
+    }
+  ]
+}

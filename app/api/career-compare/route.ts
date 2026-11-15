@@ -12,7 +12,7 @@ const Outcome = z.object({
   fiveYearSalaryLPA: Range,
   demand: z.enum(["low", "medium", "high"]).catch("medium"),
   monthsToJobReady: z.coerce.number().min(0).max(60),
-  nsqfLevel: z.coerce.number().int().min(1).max(10),
+  nsqfLevel: z.coerce.number().int().min(1).max(8),
   keySkills: z.array(z.string()).default([]),
 })
 
@@ -49,7 +49,7 @@ Give realistic, conservative estimates for the Indian job market (salaries in la
 Return ONLY JSON:
 {
   "a": { "course": "${a}", "typicalRoles": [2-4 roles], "entrySalaryLPA": {"min": n, "max": n}, "fiveYearSalaryLPA": {"min": n, "max": n},
-         "demand": "low"|"medium"|"high", "monthsToJobReady": n, "nsqfLevel": 1-10, "keySkills": [3-5 skills] },
+         "demand": "low"|"medium"|"high", "monthsToJobReady": n, "nsqfLevel": 1-8 (NSQF, revised 2023), "keySkills": [3-5 skills] },
   "b": { same shape for "${b}" },
   "recommendation": "2-3 sentences: who should pick which, and why"
 }`

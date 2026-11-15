@@ -1,4 +1,8 @@
 import type { createClient } from "@/lib/supabase/server"
+import { clampNsqfLevel } from "@/lib/nsqf"
+import { estimateLevelFromEducation } from "@/lib/nsqf-path"
+import type { LearnerLevel } from "@/lib/placement"
+import { formatLevel, getQualification, getTrack } from "@/lib/qualifications"
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>
 
@@ -9,6 +13,8 @@ export type RoadmapSummary = {
   id: string
   title: string
   nsqfLevel: number | null
+  /** The real NSQF qualification this roadmap is built on, if any (from the catalogue, by id). */
+  qualification: { id: string; title: string; level: number; code: string } | null
   total: number
   done: number
   percent: number
@@ -27,6 +33,9 @@ export type LearnerSnapshot = {
   pointsSpent: number
   onboarded: boolean
   onboarding: Record<string, any>
+  /** The learner's NSQF level: "tested" only from a submitted placement test, else "estimated". */
+  level: LearnerLevel
+  /** Same as level.value; kept for callers that only need the number. */
   currentLevel: number | null
   roadmaps: RoadmapSummary[]
   /** Roadmaps finished now, or ever (a paid roadmap bonus still counts after a lesson is unticked or the roadmap deleted). */
@@ -88,9 +97,38 @@ export function computeStreak(active: Set<string>, freezeDays: string[], today: 
   return { streak, frozen, freezesAvailable: freezes.length - used }
 }
 
+type PlacementRow = { track?: string; placed_level?: number; target_level?: number; submitted_at?: string } | null
+
+/**
+ * The learner's level. "tested" comes only from placement_result() (server-written, so the
+ * learner can't edit it). Otherwise it's "estimated": an old self-set current_nsqf_level, else
+ * the official entry level for their education, else the highest level among their roadmaps.
+ */
+type LevelFields = { current_nsqf_level?: unknown; academicBackground?: { highestQualification?: unknown }; [key: string]: unknown }
+
+export function resolveLevel(placement: unknown, onboarding: LevelFields, roadmaps: { nsqfLevel: number | null }[]): LearnerLevel {
+  const p = placement as PlacementRow
+  if (p && typeof p.placed_level === "number") {
+    return {
+      value: clampNsqfLevel(p.placed_level),
+      source: "tested",
+      track: typeof p.track === "string" ? p.track : undefined,
+      target: typeof p.target_level === "number" ? clampNsqfLevel(p.target_level) : undefined,
+      takenAt: p.submitted_at,
+    }
+  }
+  const saved = Number(onboarding.current_nsqf_level)
+  const fromRoadmaps = roadmaps.reduce<number | null>((max, r) => (r.nsqfLevel !== null && (max === null || r.nsqfLevel > max) ? r.nsqfLevel : max), null)
+  const estimate =
+    Number.isFinite(saved) && saved > 0
+      ? saved
+      : (estimateLevelFromEducation(String(onboarding.academicBackground?.highestQualification ?? "")) ?? fromRoadmaps)
+  return { value: estimate === null ? null : clampNsqfLevel(estimate), source: "estimated" }
+}
+
 /** Loads everything the learner-facing features need, using the caller's RLS-scoped client. */
 export async function loadLearner(supabase: SupabaseServerClient, userId: string): Promise<LearnerSnapshot> {
-  const [{ data: profile }, { data: roadmapRows }, { data: progressRows }, eventsRes, redemptionsRes, catalogRes, verifiedRes] = await Promise.all([
+  const [{ data: profile }, { data: roadmapRows }, { data: progressRows }, eventsRes, redemptionsRes, catalogRes, verifiedRes, placementRes] = await Promise.all([
     supabase.from("profiles").select("full_name, points, onboarded, onboarding_data").eq("id", userId).single(),
     supabase
       .from("roadmaps")
@@ -103,6 +141,8 @@ export async function loadLearner(supabase: SupabaseServerClient, userId: string
     supabase.from("reward_redemptions").select("reward_id, target_id, created_at").eq("user_id", userId),
     supabase.from("reward_catalog").select("name, cost, kind").eq("active", true).order("sort", { ascending: true }),
     supabase.rpc("verified_roadmaps"),
+    // Null until the learner submits a placement test (or until schema.sql adds the function).
+    supabase.rpc("placement_result"),
   ])
   const events = eventsRes.data ?? []
   const redemptions = redemptionsRes.data ?? []
@@ -130,10 +170,12 @@ export async function loadLearner(supabase: SupabaseServerClient, userId: string
     )
     const doneCount = topics.filter((t) => t.done).length
     const next = topics.find((t) => !t.done) ?? null
+    const q = getQualification(r.content?.qualification?.id)
     return {
       id: r.id,
       title: r.title,
       nsqfLevel: typeof r.nsqf_level === "number" ? r.nsqf_level : null,
+      qualification: q ? { id: q.id, title: q.title, level: q.level, code: q.code } : null,
       total: topics.length,
       done: doneCount,
       percent: topics.length ? Math.round((doneCount / topics.length) * 100) : 0,
@@ -183,11 +225,8 @@ export async function loadLearner(supabase: SupabaseServerClient, userId: string
   }
 
   const onboarding = (profile?.onboarding_data as Record<string, any>) ?? {}
-  const savedLevel = onboarding.current_nsqf_level
-  const currentLevel =
-    typeof savedLevel === "number"
-      ? savedLevel
-      : roadmaps.reduce<number | null>((max, r) => (r.nsqfLevel !== null && (max === null || r.nsqfLevel > max) ? r.nsqfLevel : max), null)
+  const level = resolveLevel(placementRes.data, onboarding, roadmaps)
+  const currentLevel = level.value
 
   return {
     name: profile?.full_name ?? null,
@@ -196,6 +235,7 @@ export async function loadLearner(supabase: SupabaseServerClient, userId: string
     pointsSpent,
     onboarded: Boolean(profile?.onboarded),
     onboarding,
+    level,
     currentLevel,
     roadmaps,
     roadmapsFinished: finished.size,
@@ -223,7 +263,11 @@ export function describeLearner(l: LearnerSnapshot): string {
   const o = l.onboarding
   const lines = [
     `Name: ${l.name ?? "unknown"}`,
-    `Current NSQF level: ${l.currentLevel ?? "not set"}`,
+    l.level.value === null
+      ? "NSQF level: not known yet (no placement test taken)"
+      : l.level.source === "tested"
+        ? `NSQF level: ${l.level.value}, tested by GyaanGuru's placement test in "${getTrack(l.level.track)?.name ?? l.level.track}" (a practice test, not an official NSQF assessment)${l.level.target ? `; recommended next: level ${l.level.target} qualifications` : ""}`
+        : `NSQF level: about ${l.level.value}, estimated from their education and roadmaps, not tested`,
     `Education: ${o.academicBackground?.highestQualification || "unknown"}${o.academicBackground?.stream ? ` (${o.academicBackground.stream})` : ""}`,
     `Skills: ${o.priorSkills?.skills || "not given"}`,
     `Location: ${o.socioEconomic?.location || "not given"}; devices: ${o.socioEconomic?.accessToDevices || "not given"}; English: ${o.socioEconomic?.englishProficiency || "not given"}`,
@@ -239,7 +283,13 @@ export function describeLearner(l: LearnerSnapshot): string {
     lines.push("Roadmaps:")
     for (const r of l.roadmaps.slice(0, 5)) {
       lines.push(
-        `- "${r.title}"${r.nsqfLevel ? ` (NSQF L${r.nsqfLevel})` : ""}: ${r.percent}% done${r.next ? `; next lesson "${r.next.title}" in module "${r.next.moduleTitle}"` : "; completed"}`,
+        `- "${r.title}"${
+          r.qualification
+            ? ` (prepares for the real NSQF qualification "${r.qualification.title}", level ${formatLevel(r.qualification.level)}, NQR code ${r.qualification.code})`
+            : r.nsqfLevel
+              ? ` (estimated NSQF level ${r.nsqfLevel})`
+              : ""
+        }: ${r.percent}% done${r.next ? `; next lesson "${r.next.title}" in module "${r.next.moduleTitle}"` : "; completed"}`,
       )
     }
   } else {

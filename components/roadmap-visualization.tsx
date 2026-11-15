@@ -30,13 +30,19 @@ import { cn } from "@/lib/utils"
 import { VisualRoadmap } from "./visual-roadmap"
 import { YouTubeLectures } from "./youtube-lectures" // new component for videos
 import { RichText } from "@/components/rich-text"
+import { QuizQuestions } from "@/components/quiz-questions"
+import type { QualificationRef } from "@/lib/qualifications"
 
 interface RoadmapData {
   title: string
   description: string
+  /** Set when the roadmap is built on a real NSQF qualification (one module per unit). */
+  qualification?: QualificationRef
   modules: Array<{
     id: string
     title: string
+    /** The official unit (NOS) code this module covers. */
+    unit?: string
     notes?: string | string[]
     inDepthContent?: string | string[]
     topics: Array<{
@@ -563,7 +569,17 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
                   >
                     {moduleIndex + 1}
                   </div>
-                  <span className="flex-1 font-semibold">{module.title}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-semibold">{module.title}</span>
+                    {module.unit && (
+                      <span
+                        className="mt-0.5 inline-block rounded-full border border-ink/40 bg-leaf-soft px-2 py-px font-mono text-[11px] font-semibold text-ink"
+                        title="The official unit (National Occupational Standard) this module covers"
+                      >
+                        {module.unit}
+                      </span>
+                    )}
+                  </span>
                   {isExpanded ? (
                     <ChevronDown className="h-4 w-4 text-muted-foreground" />
                   ) : (
@@ -1007,57 +1023,13 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
                         : `You've earned points for ${DAILY_PAID_LESSONS} lessons today. Passing still ticks the lesson; points resume tomorrow.`}
                     </p>
                   )}
-                  {quizData.questions.map((question, qIndex) => {
-                    const result = quizResult?.results[qIndex]
-                    return (
-                      <div key={qIndex} className="space-y-3" data-quiz-question={qIndex}>
-                        <h3 className="font-semibold">
-                          {qIndex + 1}. {question.question}
-                        </h3>
-                        <div className="space-y-2">
-                          {question.options.map((option, oIndex) => {
-                            const isSelected = selectedAnswers[qIndex] === oIndex
-                            const isCorrect = result?.correctAnswer === oIndex
-                            const showResult = quizSubmitted
-
-                            return (
-                              <button
-                                key={oIndex}
-                                onClick={() => handleAnswerSelect(qIndex, oIndex)}
-                                disabled={quizSubmitted || isSubmittingQuiz}
-                                className={cn(
-                                  "flex w-full items-center gap-3 rounded-lg border p-4 text-left transition-colors",
-                                  !showResult && "hover:bg-muted/50",
-                                  isSelected && !showResult && "border-primary bg-primary/5",
-                                  showResult && isCorrect && "border-leaf bg-leaf-soft",
-                                  showResult && isSelected && !isCorrect && "border-coral bg-coral-soft",
-                                  quizSubmitted && "cursor-default",
-                                )}
-                              >
-                                <div
-                                  className={cn(
-                                    "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2",
-                                    isSelected && !showResult && "border-primary bg-primary",
-                                    showResult && isCorrect && "border-leaf bg-leaf",
-                                    showResult && isSelected && !isCorrect && "border-coral bg-coral",
-                                  )}
-                                >
-                                  {isSelected && <div className="h-2 w-2 rounded-full bg-white"></div>}
-                                </div>
-                                <span className="flex-1">{option}</span>
-                              </button>
-                            )
-                          })}
-                        </div>
-                        {result?.explanation && (
-                          <div className="rounded-lg bg-muted p-3 text-sm">
-                            <p className="mb-1 font-semibold">Explanation:</p>
-                            <p className="text-muted-foreground">{result.explanation}</p>
-                          </div>
-                        )}
-                      </div>
-                    )
-                  })}
+                  <QuizQuestions
+                    questions={quizData.questions}
+                    selected={selectedAnswers}
+                    onSelect={handleAnswerSelect}
+                    results={quizResult?.results ?? null}
+                    disabled={isSubmittingQuiz}
+                  />
                 </div>
               ) : null}
             </div>
@@ -1170,7 +1142,19 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
                 <X className="h-4 w-4" />
               </button>
             </div>
+            {roadmap.qualification && (
+              <p className="mt-3 text-sm text-ink/75">
+                Next: take the official assessment for <strong className="text-ink">{roadmap.qualification.title}</strong>.
+              </p>
+            )}
             <div className="mt-4 flex flex-wrap gap-2">
+              {roadmap.qualification && (
+                <Button asChild size="sm" variant="secondary">
+                  <a href="#get-certified" onClick={() => setRoadmapBonus(null)}>
+                    Get officially certified
+                  </a>
+                </Button>
+              )}
               <Button asChild size="sm">
                 <Link href="/rewards#perks">Get your certificate</Link>
               </Button>
@@ -1190,6 +1174,7 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
         recapApproved={quizStatus.recapApproved}
         bonusPaid={quizStatus.bonusPaid}
         bonusAmount={bonusForLessons(totalTopics)}
+        qualificationTitle={roadmap.qualification?.title}
         onApproved={(bonus) => {
           setQuizStatus((prev) => ({ ...prev, recapApproved: true, bonusPaid: prev.bonusPaid || bonus > 0 }))
           if (bonus > 0) setRoadmapBonus(bonus)

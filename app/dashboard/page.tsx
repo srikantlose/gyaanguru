@@ -9,6 +9,7 @@ import { PageHeader } from "@/components/page-header"
 import { SpotlightCard } from "@/components/spotlight-card"
 import { GrowthIllustration, MapIllustration } from "@/components/illustrations"
 import { cn } from "@/lib/utils"
+import { resolveLevel } from "@/lib/learner"
 
 // Cycled per roadmap card so the grid reads as distinct, colorful items.
 const CARD_TONES = [
@@ -69,22 +70,20 @@ export default async function DashboardPage() {
 
   // Lifetime totals for the Points tile, and whether the Sticker Pack reward is unlocked. Both tables
   // come from scripts/schema.sql; until it has been run these return errors and we fall back quietly.
-  const [{ data: pointRows }, { data: stickerRows }] = await Promise.all([
+  const [{ data: pointRows }, { data: stickerRows }, { data: placement }] = await Promise.all([
     supabase.from("point_events").select("amount").eq("user_id", user.id),
     supabase.from("reward_redemptions").select("id").eq("user_id", user.id).eq("reward_id", "sticker-pack").limit(1),
+    supabase.rpc("placement_result"),
   ])
   const pointsSpent = (pointRows ?? []).reduce((acc, r) => acc + Math.max(0, -Number(r.amount)), 0)
   const pointsEarned = pointRows ? pointRows.reduce((acc, r) => acc + Math.max(0, Number(r.amount)), 0) : points
   const hasStickers = (stickerRows ?? []).length > 0
   const topicsDone = roadmapsWithProgress.reduce((acc, r) => acc + r.completedTopics, 0)
-  const savedLevel = profile?.onboarding_data?.current_nsqf_level
-  const currentLevel =
-    typeof savedLevel === "number"
-      ? savedLevel
-      : roadmapsWithProgress.reduce<number | null>(
-          (max, r) => (typeof r.nsqf_level === "number" && (max === null || r.nsqf_level > max) ? r.nsqf_level : max),
-          null,
-        )
+  const level = resolveLevel(
+    placement,
+    profile?.onboarding_data ?? {},
+    roadmapsWithProgress.map((r) => ({ nsqfLevel: typeof r.nsqf_level === "number" ? r.nsqf_level : null })),
+  )
 
   const stats: {
     label: string
@@ -107,11 +106,13 @@ export default async function DashboardPage() {
     { label: "Roadmaps", value: roadmapsWithProgress.length, icon: MapIcon, tile: "bg-brand-soft", iconBg: "bg-brand text-ink border-2 border-ink" },
     { label: "Topics done", value: topicsDone, icon: CheckCircle2, tile: "bg-leaf-soft", iconBg: "bg-leaf text-ink border-2 border-ink" },
     {
-      label: "NSQF level",
-      value: currentLevel ? `L${currentLevel}` : "–",
+      label: level.source === "tested" ? "NSQF level (tested)" : "NSQF level (estimated)",
+      value: level.value ? `L${level.value}` : "–",
       icon: Layers,
       tile: "bg-lagoon-soft",
       iconBg: "bg-lagoon text-ink border-2 border-ink",
+      href: "/placement",
+      hint: level.source === "tested" ? "Placement test · retake any time" : "Take the placement test",
     },
   ]
 
@@ -220,11 +221,18 @@ export default async function DashboardPage() {
                         <span className={cn("rounded-full border-2 border-ink px-2.5 py-0.5 text-xs font-bold capitalize", t.soft)}>
                           {roadmap.experience_level}
                         </span>
-                        {typeof roadmap.nsqf_level === "number" && (
-                          <span className="rounded-full border-2 border-ink bg-ink px-2.5 py-0.5 text-xs font-bold text-white">
-                            NSQF L{roadmap.nsqf_level}
+                        {roadmap.content?.qualification?.id ? (
+                          <span
+                            className="rounded-full border-2 border-ink bg-ink px-2.5 py-0.5 text-xs font-bold text-white"
+                            title={`Built on the NSQF qualification "${roadmap.content.qualification.title}"`}
+                          >
+                            NSQF {roadmap.content.qualification.level} · qualification
                           </span>
-                        )}
+                        ) : typeof roadmap.nsqf_level === "number" ? (
+                          <span className="rounded-full border-2 border-ink bg-card px-2.5 py-0.5 text-xs font-bold text-ink" title="Estimated level">
+                            ≈ NSQF {roadmap.nsqf_level} (est.)
+                          </span>
+                        ) : null}
                       </div>
                       <DeleteRoadmapButton roadmapId={roadmap.id} />
                     </div>

@@ -1,232 +1,129 @@
-"use client"
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import Link from "next/link"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { NsqfRoadmap } from "@/components/nsqf-roadmap"
 import { PageHeader } from "@/components/page-header"
 import { SpotIllustration } from "@/components/illustrations"
-import { RoadmapVisualization } from "@/components/roadmap-visualization"
+import { createClient } from "@/lib/supabase/server"
+import { dayKey, resolveLevel } from "@/lib/learner"
+import { buildPath } from "@/lib/nsqf-path"
+import { NSQF_MAX_LEVEL, NSQF_MIN_LEVEL } from "@/lib/nsqf"
+import type { LearnerLevel } from "@/lib/placement"
+import { QUALIFICATIONS_CHECKED_ON, getTrack, listTracks } from "@/lib/qualifications"
+import { cn } from "@/lib/utils"
 
-interface CourseRoadmapData {
-  title: string
-  description: string
-  modules: Array<{
-    id: string
-    title: string
-    notes?: string | string[]
-    inDepthContent?: string | string[]
-    topics: Array<{
-      id: string
-      title: string
-      description: string
-      estimatedHours: number
-      notes?: string | string[]
-      inDepthContent?: string | string[]
-    }>
-  }>
+export const metadata = { title: "NSQF path planner" }
+
+type Onboarding = {
+  aspirations?: { targetJobRole?: string; shortTermGoal?: string }
+  priorSkills?: { skills?: string }
+  academicBackground?: { highestQualification?: string }
+  current_nsqf_level?: number
 }
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json())
+const pill = (active: boolean) =>
+  cn(
+    "rounded-full border-2 border-ink px-3 py-1 text-sm font-bold text-ink transition",
+    active ? "bg-marigold shadow-soft" : "bg-card hover:bg-paper",
+  )
 
-function aiNsqfToCourse(ai: {
-  title: string
-  rationale: string
-  nodes: Array<{ nsqfLevel: number; course: string; jobRole: string; optionalCourses?: string[] }>
-}): CourseRoadmapData {
-  return {
-    title: ai.title || "NSQF AI Roadmap",
-    description: ai.rationale || "Personalized NSQF-aligned learning plan.",
-    modules: ai.nodes.map((node, idx) => {
-      const baseTopic = {
-        id: `nsqf-${idx + 1}-core`,
-        title: `${node.course} – Core Outcomes`,
-        description: `Develop skills for the role "${node.jobRole}" at NSQF Level ${node.nsqfLevel}.`,
-        estimatedHours: 6,
-      }
-      const optionalTopics =
-        (node.optionalCourses || []).slice(0, 4).map((c, cIdx) => ({
-          id: `nsqf-${idx + 1}-opt-${cIdx + 1}`,
-          title: `Optional: ${c}`,
-          description: `Supplementary upskilling to strengthen readiness for ${node.jobRole}.`,
-          estimatedHours: 3,
-        })) || []
+// Rule-based, no AI: a ladder of real qualifications from the National Qualifications Register.
+export default async function NsqfPathPage({ searchParams }: { searchParams: Promise<{ track?: string; level?: string }> }) {
+  const sp = await searchParams
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
-      return {
-        id: `nsqf-${idx + 1}`,
-        title: `NSQF Level ${node.nsqfLevel}: ${node.course}`,
-        inDepthContent: [
-          `Target Job Role: ${node.jobRole}`,
-          `This step aligns with autonomy and responsibility at NSQF Level ${node.nsqfLevel}.`,
-        ],
-        topics: [baseTopic, ...optionalTopics],
-      }
-    }),
-  }
-}
-
-export default function NsqfDemoPage() {
-  const [education, setEducation] = useState("Class 12")
-  const [skills, setSkills] = useState("Basic IT, Excel")
-  const [goal, setGoal] = useState("Digital Marketing")
-  const [aiLoading, setAiLoading] = useState(false)
-  const [aiError, setAiError] = useState<string | null>(null)
-  const [aiRoadmap, setAiRoadmap] = useState<{
-    title: string
-    rationale: string
-    nodes: Array<{ nsqfLevel: number; course: string; jobRole: string; optionalCourses?: string[] }>
-  } | null>(null)
-
-  const [showCourseView, setShowCourseView] = useState(false)
-  const [courseRoadmap, setCourseRoadmap] = useState<CourseRoadmapData | null>(null)
-  const [courseRoadmapId, setCourseRoadmapId] = useState<string | null>(null)
-
-  const [savingCourse, setSavingCourse] = useState(false)
-  const [saveError, setSaveError] = useState<string | null>(null)
-
-  async function generateWithAI() {
-    setAiLoading(true)
-    setAiError(null)
-    setAiRoadmap(null)
-    try {
-      const res = await fetch("/api/nsqf/ai-roadmap", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          learnerProfile: {
-            education,
-            skills: skills
-              .split(",")
-              .map((s) => s.trim())
-              .filter(Boolean),
-            goal,
-          },
-        }),
-      })
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}))
-        throw new Error(err?.error || "Failed to generate AI roadmap")
-      }
-      const json = await res.json()
-      setAiRoadmap(json.roadmap)
-    } catch (e: any) {
-      setAiError(e?.message || "Failed to generate AI roadmap")
-    } finally {
-      setAiLoading(false)
-    }
+  let mine: LearnerLevel = { value: null, source: "estimated" }
+  let goal = ""
+  if (user) {
+    const [{ data: profile }, { data: placement }] = await Promise.all([
+      supabase.from("profiles").select("onboarding_data").eq("id", user.id).maybeSingle(),
+      supabase.rpc("placement_result"),
+    ])
+    const o = ((profile?.onboarding_data as Onboarding | null) ?? {}) as Onboarding
+    mine = resolveLevel(placement, o, [])
+    goal = [o.aspirations?.targetJobRole, o.aspirations?.shortTermGoal, o.priorSkills?.skills].filter(Boolean).join(" ")
   }
 
-  if (showCourseView && courseRoadmap && courseRoadmapId) {
-    return (
-      <RoadmapVisualization
-        roadmap={courseRoadmap}
-        roadmapId={courseRoadmapId}
-        onReset={() => {
-          setShowCourseView(false)
-          setCourseRoadmap(null)
-          setCourseRoadmapId(null)
-        }}
-      />
-    )
-  }
+  const asked = Number(sp.level)
+  const pickedLevel = Number.isInteger(asked) && asked >= NSQF_MIN_LEVEL && asked <= NSQF_MAX_LEVEL ? asked : null
+  const level: LearnerLevel = pickedLevel !== null ? { value: pickedLevel, source: "estimated" } : mine
+  const path = buildPath({
+    goal,
+    track: getTrack(sp.track)?.id ?? (mine.source === "tested" ? mine.track : null),
+    level: level.value ?? NSQF_MIN_LEVEL,
+    today: dayKey(new Date()),
+  })
+  const href = (track: string, lvl: number | null) => `/nsqf/demo?track=${track}${lvl ? `&level=${lvl}` : ""}`
 
   return (
     <main className="container mx-auto max-w-5xl px-4 py-10 sm:py-12">
       <PageHeader
-        eyebrow="NSQF pathways"
+        eyebrow="NSQF path"
         tone="marigold"
-        title="Map your path across NSQF levels"
-        description="Enter your education, skills and goal. You'll get a three-step pathway from Level 3 to 6 with a course and job role at each step."
+        title="Plan your qualification path"
+        description="Pick a track and where you're starting. You'll see real NSQF qualifications at each level up to 6, each one you can build a roadmap on and then take officially."
         art={<SpotIllustration kind="nsqf" />}
       />
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl">Your details</CardTitle>
+          <CardTitle className="text-xl">Your path</CardTitle>
           <CardDescription>
-            We&apos;ll suggest a 3-level path aligned to NSQF levels 3–6. You can drag the steps to reorder them.
+            Qualifications come from the National Qualifications Register (checked {QUALIFICATIONS_CHECKED_ON}). GyaanGuru prepares you;
+            the awarding body assesses and certifies you.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="grid gap-2">
-              <Label htmlFor="education">Education</Label>
-              <Input id="education" value={education} onChange={(e) => setEducation(e.target.value)} />
+        <CardContent className="space-y-5">
+          <div className="space-y-2">
+            <p className="text-sm font-bold text-ink">Track</p>
+            <div className="flex flex-wrap gap-2">
+              {listTracks().map((t) => (
+                <Link key={t.id} href={href(t.id, pickedLevel)} className={pill(t.id === path.track.id)} aria-current={t.id === path.track.id ? "true" : undefined}>
+                  {t.name}
+                </Link>
+              ))}
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="skills">Skills (comma-separated)</Label>
-              <Input id="skills" value={skills} onChange={(e) => setSkills(e.target.value)} />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="goal">Goal</Label>
-              <Input id="goal" value={goal} onChange={(e) => setGoal(e.target.value)} />
+            <p className="text-sm text-ink/65">{path.track.blurb}</p>
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm font-bold text-ink">Starting level</p>
+            <div className="flex flex-wrap items-center gap-2">
+              {[3, 4, 5, 6].map((l) => (
+                <Link key={l} href={href(path.track.id, l)} className={pill(path.startLevel === l)} aria-current={path.startLevel === l ? "true" : undefined}>
+                  L{l}
+                </Link>
+              ))}
+              <span className="text-sm text-ink/65">
+                {user ? (
+                  mine.source === "tested" ? (
+                    <>Your tested level is L{mine.value}.</>
+                  ) : (
+                    <>
+                      Not sure?{" "}
+                      <Link href="/placement" className="font-semibold text-primary underline underline-offset-4">
+                        Take the placement test
+                      </Link>
+                      .
+                    </>
+                  )
+                ) : (
+                  <>
+                    <Link href="/auth/sign-up" className="font-semibold text-primary underline underline-offset-4">
+                      Sign up
+                    </Link>{" "}
+                    to take a placement test.
+                  </>
+                )}
+              </span>
             </div>
           </div>
-          <div className="mt-4 flex items-center gap-3">
-            <Button onClick={generateWithAI} disabled={aiLoading}>
-              {aiLoading ? "Generating..." : "Generate with AI"}
-            </Button>
-            {aiError && <span className="text-sm text-coral-ink">{aiError}</span>}
-          </div>
-
-          {aiRoadmap && (
-            <div className="mt-6 grid gap-3">
-              <div className="rounded-2xl bg-marigold-soft/60 p-5">
-                <p className="text-xs font-bold uppercase tracking-wider text-marigold-ink">Your pathway</p>
-                <h3 className="mt-1 text-xl font-bold text-ink">{aiRoadmap.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-ink/75">{aiRoadmap.rationale}</p>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="outline"
-                  disabled={savingCourse}
-                  onClick={async () => {
-                    if (!aiRoadmap) return
-                    setSaveError(null)
-                    setSavingCourse(true)
-                    try {
-                      const cr = aiNsqfToCourse(aiRoadmap)
-                      const nsqfLevel = Math.max(...aiRoadmap.nodes.map((n) => n.nsqfLevel))
-                      const res = await fetch("/api/nsqf/save-roadmap", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                          roadmap: cr,
-                          meta: {
-                            education,
-                            skills: skills
-                              .split(",")
-                              .map((s) => s.trim())
-                              .filter(Boolean),
-                            goal,
-                          },
-                          nsqfLevel,
-                        }),
-                      })
-                      if (!res.ok) {
-                        const err = await res.json().catch(() => ({}))
-                        throw new Error(err?.error || "Failed to save course")
-                      }
-                      const json = await res.json()
-                      setCourseRoadmap(cr)
-                      setCourseRoadmapId(json.id)
-                      setShowCourseView(true)
-                    } catch (e: any) {
-                      setSaveError(e?.message || "Failed to save course. Please log in and try again.")
-                    } finally {
-                      setSavingCourse(false)
-                    }
-                  }}
-                >
-                  {savingCourse ? "Saving..." : "View as Course"}
-                </Button>
-                {saveError && <span className="text-sm text-coral-ink">{saveError}</span>}
-              </div>
-
-              <NsqfRoadmap initialNodes={aiRoadmap.nodes} />
-            </div>
-          )}
+          <NsqfRoadmap
+            nodes={path.path}
+            level={{ ...level, value: path.startLevel }}
+            trackName={path.track.name}
+            label={pickedLevel !== null || mine.value === null ? `Starting at L${path.startLevel}` : undefined}
+          />
         </CardContent>
       </Card>
     </main>

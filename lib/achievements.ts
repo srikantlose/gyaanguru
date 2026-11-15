@@ -44,6 +44,17 @@ export function computeAchievements(l: LearnerSnapshot): Achievement[] {
     add({ id: "finisher", title: "Finisher", description: "Complete a whole roadmap", tone: "leaf", hint: `${roadmapsDone}/1 roadmaps` }, roadmapsDone, 1),
     add({ id: "momentum-builder", title: "Momentum Builder", description: "Finish 5 roadmaps", tone: "lagoon", hint: `${roadmapsDone}/5 roadmaps` }, roadmapsDone, 5),
     add({ id: "learning-champion", title: "Learning Champion", description: "Finish 10 roadmaps", tone: "bubblegum", hint: `${roadmapsDone}/10 roadmaps` }, roadmapsDone, 10),
-    add({ id: "level-up", title: "Level Up", description: "Reach NSQF Level 5", tone: "marigold", hint: `L${l.currentLevel ?? "–"} of L5` }, l.currentLevel ?? 0, 5),
+    // Only a tested level counts: an estimate isn't proof of anything.
+    add(
+      {
+        id: "level-up",
+        title: "Level Up",
+        description: "Test at NSQF level 5 or above in a placement test",
+        tone: "marigold",
+        hint: l.level.source === "tested" ? `Tested L${l.level.value} of L5` : "Take the placement test",
+      },
+      l.level.source === "tested" ? (l.level.value ?? 0) : 0,
+      5,
+    ),
   ]
 }

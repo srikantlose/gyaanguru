@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { LogoMark } from "@/components/logo"
 import { Stamp } from "@/components/doodles"
 import { PrintButton } from "@/components/print-button"
+import { formatLevel, getQualification } from "@/lib/qualifications"
 
 export const metadata = {
   title: "Completion certificate",
@@ -78,6 +79,7 @@ export default async function CertificatePage({ params }: { params: Promise<{ ro
     )
   }
 
+  const qualification = getQualification(roadmap.content?.qualification?.id)
   const modules: Module[] = Array.isArray(roadmap.content?.modules) ? roadmap.content.modules : []
   const lessons = modules.reduce((acc, m) => acc + (m.topics?.length ?? 0), 0)
   const hours = Math.round(modules.reduce((acc, m) => acc + (m.topics ?? []).reduce((h, t) => h + (Number(t.estimatedHours) || 0), 0), 0) * 10) / 10
@@ -114,10 +116,17 @@ export default async function CertificatePage({ params }: { params: Promise<{ ro
           <p className="mt-3 text-2xl font-extrabold leading-snug text-ink sm:text-3xl">
             <span className="marker">{roadmap.title}</span>
           </p>
+          {qualification && (
+            <p className="mx-auto mt-3 max-w-xl text-ink/70">
+              built on the official units of the NSQF qualification <strong className="text-ink">{qualification.title}</strong>
+            </p>
+          )}
 
           <dl className="mx-auto mt-8 grid max-w-2xl grid-cols-2 gap-3 text-left sm:grid-cols-4">
             {[
-              { label: "NSQF level", value: typeof roadmap.nsqf_level === "number" ? `L${roadmap.nsqf_level}` : "–" },
+              qualification
+                ? { label: "Prepares for", value: `NSQF ${formatLevel(qualification.level)} qualification` }
+                : { label: "NSQF level (est.)", value: typeof roadmap.nsqf_level === "number" ? `≈ L${roadmap.nsqf_level}` : "–" },
               { label: "Lessons", value: lessons },
               { label: "Study hours", value: hours },
               { label: "Completed", value: completedOn },
@@ -143,8 +152,18 @@ export default async function CertificatePage({ params }: { params: Promise<{ ro
           </div>
 
           <p className="mx-auto mt-8 max-w-xl text-xs leading-relaxed text-ink/60">
-            Issued by GyaanGuru for learning completed on the platform. The NSQF level is GyaanGuru&apos;s rating of the roadmap; this
-            is not an NCVET-approved qualification.
+            {qualification ? (
+              <>
+                Issued by GyaanGuru for learning completed on the platform. This is a GyaanGuru completion certificate, not an NSQF
+                qualification. The roadmap prepares for {qualification.title} (NSQF level {formatLevel(qualification.level)}, NQR code{" "}
+                {qualification.code}), which is earned by passing the assessment of {qualification.awardingBody}: {qualification.url}
+              </>
+            ) : (
+              <>
+                Issued by GyaanGuru for learning completed on the platform. The NSQF level is GyaanGuru&apos;s estimate for the roadmap;
+                this is not an NSQF qualification and not approved by NCVET.
+              </>
+            )}
           </p>
         </div>
       </article>

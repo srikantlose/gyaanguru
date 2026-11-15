@@ -10,37 +10,37 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Loader2, Route, Target } from "lucide-react"
-import { RoadmapVisualization } from "@/components/roadmap-visualization"
 import { useRouter } from "next/navigation"
+import { QualificationPicker } from "@/components/qualification-picker"
+import { getQualification, type Qualification } from "@/lib/qualifications"
 
-interface RoadmapData {
-  title: string
-  description: string
-  modules: Array<{
-    id: string
-    title: string
-    topics: Array<{
-      id: string
-      title: string
-      description: string
-      estimatedHours: number
-    }>
-  }>
+type Props = {
+  /** Preselected qualification, e.g. from /generate?qualification=nqr-14734. */
+  initialQualificationId?: string | null
+  /** The learner's level band, to rank qualification suggestions. */
+  band?: number | null
+  /** Today's YYYY-MM-DD key (India), from the server. */
+  today: string
 }
 
-export function RoadmapGenerator() {
+export function RoadmapGenerator({ initialQualificationId = null, band = null, today }: Props) {
+  const initial = getQualification(initialQualificationId)
   const [formData, setFormData] = useState({
-    topic: "",
+    topic: initial?.title ?? "",
     experience: "",
-    goal: "",
+    goal: initial ? "certification" : "",
     hoursPerWeek: "",
     additionalInfo: "",
   })
+  const [qualificationId, setQualificationId] = useState<string | null>(initial?.id ?? null)
   const [isGenerating, setIsGenerating] = useState(false)
-  const [roadmap, setRoadmap] = useState<RoadmapData | null>(null)
-  const [roadmapId, setRoadmapId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
+
+  const chooseQualification = (q: Qualification | null) => {
+    setQualificationId(q?.id ?? null)
+    if (q && !formData.topic.trim()) setFormData({ ...formData, topic: q.title })
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -51,7 +51,7 @@ export function RoadmapGenerator() {
       const response = await fetch("/api/generate-roadmap", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, qualificationId }),
       })
 
       if (response.status === 401) {
@@ -63,27 +63,13 @@ export function RoadmapGenerator() {
       if (!response.ok || !data.roadmap || !data.roadmapId) {
         throw new Error(data?.error || "Couldn't generate your roadmap. Please try again.")
       }
-      setRoadmap(data.roadmap)
-      setRoadmapId(data.roadmapId)
+      // The roadmap page shows the NSQF banner and, for a qualification, the way to certify.
+      router.push(`/roadmap/${data.roadmapId}`)
     } catch (error) {
       console.error("Error generating roadmap:", error)
       setError(error instanceof Error ? error.message : "Couldn't generate your roadmap. Please try again.")
-    } finally {
       setIsGenerating(false)
     }
-  }
-
-  if (roadmap && roadmapId) {
-    return (
-      <RoadmapVisualization
-        roadmap={roadmap}
-        roadmapId={roadmapId}
-        onReset={() => {
-          setRoadmap(null)
-          setRoadmapId(null)
-        }}
-      />
-    )
   }
 
   return (
@@ -167,6 +153,8 @@ export function RoadmapGenerator() {
           </div>
           </div>
 
+          <QualificationPicker topic={formData.topic} band={band} today={today} value={qualificationId} onChange={chooseQualification} />
+
           <div className="space-y-2">
             <Label htmlFor="additional">Additional Information (Optional)</Label>
             <Textarea
@@ -188,7 +176,7 @@ export function RoadmapGenerator() {
             {isGenerating ? (
               <>
                 <Loader2 className="h-5 w-5 animate-spin" />
-                Generating Your Roadmap...
+                {qualificationId ? "Mapping the units to lessons..." : "Generating Your Roadmap..."}
               </>
             ) : (
               <>

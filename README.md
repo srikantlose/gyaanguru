@@ -4,7 +4,7 @@
 
 GyaanGuru turns "I want to learn X" into a plan you can follow week by week.
 
-You tell it what you want to learn, where you're starting from and how many hours a week you have. It builds a roadmap of modules and lessons, rates it on India's NSQF scale (levels 3–6), and then helps you work through it: notes for every lesson, a quick quiz, a tutor you can ask, videos, and live jobs that match what you're learning.
+You tell it what you want to learn, where you're starting from and how many hours a week you have. It builds a roadmap of modules and lessons, optionally on the official units of a real NSQF qualification, and then helps you work through it: notes for every lesson, a quick quiz, a tutor you can ask, videos, and live jobs that match what you're learning.
 
 It's one Next.js app, with Supabase for accounts and data and Google Gemini for everything the AI writes.
 
@@ -15,15 +15,17 @@ It's one Next.js app, with Supabase for accounts and data and Google Gemini for 
   </tr>
   <tr>
     <td><sub>The home page. The ruled paper turns into graph paper under your cursor, and the stickers can be dragged around.</sub></td>
-    <td><sub>Your dashboard: points, roadmaps, lessons done and current NSQF level.</sub></td>
+    <td><sub>Your dashboard: points, roadmaps, lessons done and your NSQF level (tested or estimated).</sub></td>
   </tr>
 </table>
 
 ## What you can do with it
 
 **Plan**
-- Generate a roadmap from a topic, your level, your goal and your weekly hours. Each one gets an NSQF level and example job roles.
-- Map a three-step path across NSQF levels from your education and skills, either rule-based or written by Gemini.
+- Generate a roadmap from a topic, your level, your goal and your weekly hours.
+- Or build it on a **real NSQF qualification** from the government's National Qualifications Register: one module per official unit, and at the end, the steps to take that qualification's real assessment.
+- Take a **placement test** (12 questions across levels 3–6, marked on the server) to get a tested NSQF level instead of a guess.
+- Plan a path of real qualifications from your level up to level 6.
 
 **Learn**
 - Read notes written for each lesson, take a four-question quiz, and ask the AI instructor about the lesson.
@@ -37,7 +39,7 @@ It's one Next.js app, with Supabase for accounts and data and Google Gemini for 
 
 **Get guidance**
 - **AI Mentor**: a chat that knows your roadmaps, progress and goals, and can plan your week.
-- **Career chat** for learners, trainers and policymakers, grounded in your profile and NSQF reference data.
+- **Career chat** for learners, trainers and policymakers, grounded in your profile, the official NSQF level descriptors and real qualifications.
 - **Resume matcher**: a match score for a role, your strengths, the skills to add, and courses that cover them.
 - **Career path simulator**: compare two courses on typical roles, salary ranges in India, demand and time to job-ready.
 - **Jobs**: live listings across India from Adzuna.
@@ -48,7 +50,7 @@ It's one Next.js app, with Supabase for accounts and data and Google Gemini for 
     <td width="50%"><img src="docs/screenshots/mentor.jpg" alt="AI Mentor replying with a three-day study plan that names the learner's next lesson"></td>
   </tr>
   <tr>
-    <td><sub>A real roadmap Gemini wrote for "Excel for office jobs", rated NSQF Level 4.</sub></td>
+    <td><sub>A real roadmap Gemini wrote for "Excel for office jobs" (a free-topic roadmap, so its NSQF level is an estimate).</sub></td>
     <td><sub>The AI Mentor uses your actual roadmap and next lesson to plan your week.</sub></td>
   </tr>
 </table>
@@ -75,7 +77,7 @@ sequenceDiagram
     A->>S: check the session
     A->>G: ask for a roadmap as JSON
     G-->>A: modules and lessons
-    A->>A: validate the shape, pick an NSQF level (3–6)
+    A->>A: validate the shape; one module per unit if a qualification was picked
     A->>S: save to roadmaps (only your rows)
     A-->>P: roadmap and its id
     P-->>L: open the roadmap
@@ -101,7 +103,7 @@ The screens show that message with a **Try again** button instead of failing sil
 
 ### Data
 
-Six main tables in Supabase, all protected by row-level security so people only ever see their own rows. Three more (`lesson_quizzes`, `lesson_views`, `roadmap_recaps`) hold quiz answers and the proof-of-learning trail. Only the server can read or write them.
+Six main tables in Supabase, all protected by row-level security so people only ever see their own rows. Four more (`lesson_quizzes`, `lesson_views`, `roadmap_recaps`, `placement_tests`) hold quiz and placement answers and the proof-of-learning trail. Only the server can read or write them.
 
 ```mermaid
 erDiagram
@@ -171,6 +173,8 @@ How that's kept honest:
 - **No speed-running.** A lesson's quiz unlocks 3 minutes after you first open it, and at most 15 lessons a day earn points.
 - **The recap is read by Gemini.** It has to explain at least two specific things from the lessons in your own words; a list of lesson titles won't pass.
 - **Points can't be changed from the browser.** Every change goes through a database function in [`scripts/schema.sql`](scripts/schema.sql) and is recorded in `point_events`, so your balance always matches your points history. Paying for a passed quiz needs the server's secret key, so it can't be faked with the public one.
+
+The certificate is GyaanGuru's own and says so: it isn't an NSQF qualification. For a roadmap built on a real qualification, the roadmap page ends with how to get the official one: check the entry rules, read the qualification file, find a training centre on Skill India Digital Hub, and take the awarding body's assessment.
 
 The rewards page has three perks that do something: a **Streak Freeze** that covers one missed day, a **Completion Certificate** you can print for a verified roadmap, and a **Sticker Pack** for your dashboard. There are also six **demo rewards** (vouchers and the like) that show how a real store could work. They take the points but deliver nothing, and the page says so.
 
@@ -251,7 +255,7 @@ The rewards page has three perks that do something: a **Streak Freeze** that cov
 ```text
 app/
   page.tsx                 home page
-  dashboard/  generate/  roadmap/[id]/  ai-mentor/  career-guidance/  jobs/  nsqf/demo/
+  dashboard/  generate/  roadmap/[id]/  placement/  ai-mentor/  career-guidance/  jobs/  nsqf/demo/
   rewards/  certificate/[roadmapId]/
   auth/                    login, sign-up, forgot and reset password
   api/                     route handlers (all AI, data and third-party calls)
@@ -265,17 +269,21 @@ components/
 lib/
   gemini.ts       Gemini client with retries and model fallback
   learner.ts      one snapshot of a learner's progress, used to ground the AI
-  nsqf.ts  nsqf-path.ts  achievements.ts  rewards.ts  quiz.ts
+  nsqf.ts         official NSQF level descriptors (levels 1–8)
+  qualifications.ts  the qualification catalogue: tracks, ladders, matching
+  placement.ts    placement test rules and marking
+  nsqf-path.ts  achievements.ts  rewards.ts  quiz.ts
 scripts/schema.sql   the whole database, idempotent
-data/                NSQF reference data (levels, roles, courses)
+data/qualifications.json   real NSQF qualifications copied from nqr.gov.in
 ```
 
 ## Good to know
 
 - **Gemini limits.** A free key goes a long way for one person, but heavy use, or running tests against it, can use up a model's daily allowance. The app falls back to other models and tells you when they're all busy. Turning on billing for the key raises the limits.
 - **Emails.** Supabase's built-in email sender only delivers to people on your Supabase team, a few per hour. That's enough for testing password resets on your own account. To email anyone else, add your own SMTP server under **Authentication → Emails**.
-- **NSQF levels.** The framework runs from 1 to 10. This app assigns levels 3–6, which is the range its reference data covers.
-- **Grounding, not search.** The career chat and mentor use your profile, your progress and the app's NSQF reference data. They don't search the web or any external documents.
+- **NSQF levels.** The framework (revised in 2023) runs from 1 to 8, with half levels such as 4.5. GyaanGuru works with levels 3–6. It never awards a level: a learner's level is either *tested* (the placement test, a practice test) or *estimated*, and the screens say which. Only an awarding body can certify an NSQF qualification.
+- **Qualification data** is a snapshot of the National Qualifications Register (the date is in `data/qualifications.json`). Qualifications expire and get new versions, so it needs refreshing from nqr.gov.in now and then; anything past its approval date is hidden automatically.
+- **Grounding, not search.** The career chat and mentor use your profile, your progress, the official level descriptors and the qualification catalogue. They don't search the web or any external documents.
 
 ## The look
 

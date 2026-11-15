@@ -214,7 +214,7 @@ export function CareerGuidanceChat() {
         <CardContent className="space-y-3 text-sm text-muted-foreground">
           <p>
             With <strong className="text-ink">My data</strong> on, the chat reads your onboarding answers, roadmaps and
-            progress, plus GyaanGuru&apos;s NSQF level reference, so its advice is about you. Turn it off for general advice.
+            progress, plus the official NSQF level descriptors and real qualifications from the National Qualifications Register, so its advice is about you. Turn it off for general advice.
             Learners, trainers and policymakers can use it for:
           </p>
           <ul className="list-disc list-inside space-y-1 ml-2">

@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils"
 
 const steps = [
   { title: "Share your goal", detail: "What you want to learn, where you're starting from, and your weekly hours." },
-  { title: "Get your roadmap", detail: "Modules and topics in a sensible order, sized to your time and rated on the NSQF scale." },
+  { title: "Get your roadmap", detail: "Modules and topics in a sensible order, sized to your time, and built on a real NSQF qualification if you pick one." },
   { title: "Learn and check", detail: "Read in-depth notes, ask the instructor, take a quick quiz after each topic." },
   { title: "Track and apply", detail: "Earn points, watch your progress grow, and browse jobs that match." },
 ]

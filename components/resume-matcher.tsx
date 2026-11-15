@@ -122,7 +122,7 @@ export function ResumeMatcher({ defaultRole = "" }: { defaultRole?: string }) {
             </div>
             {result.nsqfLevel ? (
               <span className="rounded-full border-2 border-ink bg-marigold px-3 py-1 text-sm font-black text-ink shadow-soft">
-                Profile ≈ NSQF L{result.nsqfLevel}
+                Profile ≈ NSQF L{result.nsqfLevel} (AI estimate)
               </span>
             ) : null}
           </div>

@@ -130,7 +130,8 @@ export default function OnboardingPage() {
         throw new Error("schema not migrated")
       }
       if (!res.ok) throw new Error("finalize failed")
-      router.push("/dashboard")
+      // Offer the placement test next; it can be skipped from there.
+      router.push("/placement?welcome=1")
     } catch (err) {
       console.log("[v0] finalize error:", err)
       alert("We couldn't finish onboarding. Please run the migration and try again.")

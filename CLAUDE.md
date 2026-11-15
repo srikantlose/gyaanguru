@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-GyaanGuru is a personalized learning-roadmap app for Indian learners, with roadmaps aligned to NSQF (National Skills Qualification Framework) levels. It is a single Next.js 16 (App Router, Turbopack) + React 19 app using Supabase for auth and data and Google Gemini for generation. It was scaffolded with v0, which is why logs carry a `[v0]` prefix.
+GyaanGuru is a personalized learning-roadmap app for Indian learners. Roadmaps can be built on real NSQF (National Skills Qualifications Framework) qualifications, and a placement test gives learners a tested level. It is a single Next.js 16 (App Router, Turbopack) + React 19 app using Supabase for auth and data and Google Gemini for generation. It was scaffolded with v0, which is why logs carry a `[v0]` prefix.
 
 The README describes a broader platform: blockchain certificates, Express/Flask backends, Sarvam AI, LangChain/LlamaIndex RAG and Trellis 3D. **None of that is in this repo.** Don't assume it exists.
 
@@ -58,11 +58,11 @@ npm run lint         # eslint . (flat config in eslint.config.mjs; one file: npx
   - New protected pages and routes must repeat this check themselves.
 - **Every API route requires login except:**
   - `/api/jobs/search`: `/jobs` is a public page.
-  - `/api/nsqf/roadmap`: rule-based, with no external cost.
+  - `/api/nsqf/roadmap`: rule-based, with no external cost. Its page, `/nsqf/demo`, is public too.
   - Keep the routes that spend Gemini or YouTube quota behind login.
 - Which client to use:
   - `@/lib/supabase/server` (async `createClient()`, cookie-based) in server components and route handlers.
-  - `@/lib/supabase/admin` (`createAdminClient()`, secret key, **bypasses RLS**, `server-only`): only in route handlers, after checking the user, for the quiz, recap and lesson-view tables and the server-only award functions. Returns `null` when `SUPABASE_SECRET_KEY` is unset.
+  - `@/lib/supabase/admin` (`createAdminClient()`, secret key, **bypasses RLS**, `server-only`): only in route handlers, after checking the user, for the quiz, recap, lesson-view and placement-test tables and the server-only award functions. Returns `null` when `SUPABASE_SECRET_KEY` is unset.
   - `@/lib/supabase/client` in `"use client"` components (e.g. `components/header.tsx`, `app/onboarding/page.tsx`).
 - Queries filter by `user_id` explicitly even though RLS is enabled. Keep doing both.
 - **Sign-up:** if Supabase returns a session (email confirmation off), the user goes straight to `/onboarding`; otherwise to `/auth/sign-up-success`.
@@ -78,10 +78,12 @@ npm run lint         # eslint . (flat config in eslint.config.mjs; one file: npx
   - The original `scripts/00x_*.sql` files were deleted in commit `282d493`. They are viewable via `git show 4e1fd08:scripts/<name>.sql`.
 - **`profiles`**: `id` (= `auth.users.id`), `full_name`, `points`, `onboarded`, `onboarded_at`, `onboarding_data` (jsonb).
   - A trigger on `auth.users` creates the row on sign-up.
-  - The user's current NSQF level is stored inside `onboarding_data.current_nsqf_level`, not in its own column.
+  - The learner's **tested** NSQF level is not on `profiles`; it comes from `placement_tests` (see "NSQF logic"). `onboarding_data.current_nsqf_level` is a legacy self-set value, only ever shown as an estimate.
   - Signed-in users may only `update` `email`, `full_name`, `onboarded`, `onboarded_at` and `onboarding_data` (column grants). **`points` is written only by the SQL functions below.** A new profile column that users must edit needs adding to that grant.
 - **`roadmaps`**: metadata columns plus `content` (jsonb), `nsqf_level`, `nsqf_description`.
-  - `content` has the shape `{ title, description, modules: [{ id, title, topics: [{ id, title, description, estimatedHours }] }], nsqf? }`.
+  - `content` has the shape `{ title, description, modules: [{ id, title, unit?, topics: [{ id, title, description, estimatedHours }] }], nsqf?, qualification? }`.
+    - `nsqf` is `{ level, description, source: "qualification" | "estimate" }`. Older roadmaps also carry a made-up `mapping`; nothing reads it now.
+    - `qualification` is a snapshot `{ id, code, title, level, checkedOn }` of the real qualification the roadmap is built on, and `modules[i].unit` is the NOS code module i covers. Display code looks the qualification up in the catalogue by `id` and never trusts the snapshot's other fields (users can write `content`).
   - The dashboard, `RoadmapVisualization` and `VisualRoadmap` all assume this shape.
 - **`progress`**: one row per completed topic, keyed by **`(user_id, roadmap_id, module_index, topic_index)`**.
   - Rows are keyed by array position, not by topic `id`. Reordering a roadmap's modules or topics would orphan progress rows.
@@ -107,13 +109,14 @@ npm run lint         # eslint . (flat config in eslint.config.mjs; one file: npx
   - Gemini (`checkRecap`) approves it only if it explains at least two specific things from the lessons in the learner's own words. The recap sits inside `<recap>` tags and the prompt tells the model to ignore instructions in it.
   - Approval calls `award_roadmap_bonus`.
   - The lesson view's "Bonus checklist" (`components/roadmap-verify.tsx`) shows quiz status per lesson and the recap form.
-- **Trust boundary: the secret key.** `lesson_views`, `lesson_quizzes` and `roadmap_recaps` have RLS on with no policies, so learners can't read or write them; only the server's `createAdminClient()` (service_role) can. Without that, a learner could write themselves a "passed" quiz.
+- **Trust boundary: the secret key.** `lesson_views`, `lesson_quizzes`, `roadmap_recaps` and `placement_tests` have RLS on with no policies, so learners can't read or write them; only the server's `createAdminClient()` (service_role) can. Without that, a learner could write themselves a "passed" quiz or a tested level.
 - **SQL functions** (`scripts/schema.sql`):
   - For learners (`authenticated`, acting on `auth.uid()`):
     - `complete_topic` / `uncomplete_topic`: tick or untick only.
     - `redeem_reward(reward_id, target_id?)`: locks the profile row, checks the per-kind rules and the balance, then deducts. Concurrent redemptions can't overdraw.
     - `quiz_status(roadmap)`: passed lessons, plus whether the recap is approved and the bonus paid. Read by `GET /api/progress`.
-    - `verified_roadmaps()`: certificate eligibility. Read by `loadLearner`.
+    - `verified_roadmaps()`: certificate eligibility. Read by `loadLearner` and the roadmap page.
+    - `placement_result()`: the caller's latest submitted placement test (`track`, `placed_level`, `target_level`, `band_scores`, `submitted_at`), or null.
   - Server only (`service_role`):
     - `award_lesson_quiz(user, roadmap, module, topic)`: requires a passed quiz row; ticks the lesson, pays +5 subject to the daily cap, then tries the bonus.
     - `award_roadmap_bonus(user, roadmap)`: pays once if `roadmap_verified`. It locks the roadmap row, so concurrent calls pay exactly once.
@@ -134,7 +137,7 @@ npm run lint         # eslint . (flat config in eslint.config.mjs; one file: npx
   - Days are keyed in **`Asia/Kolkata`**.
   - Activity comes from the first-tick time of each lesson, using its ledger row when there is one, so unticking doesn't erase history.
   - `computeStreak()` assigns each Streak Freeze, in purchase order, to the first missed day on or after the day it was bought. A frozen day bridges the streak but doesn't add to it.
-- **Badges:** `lib/achievements.ts` (10 badges) uses `roadmapsFinished` and lifetime `pointsEarned`, so redeeming or unticking never takes a badge away.
+- **Badges:** `lib/achievements.ts` (10 badges) uses `roadmapsFinished` and lifetime `pointsEarned`, so redeeming or unticking never takes a badge away. "Level Up" needs a **tested** level of 5+; an estimate never counts.
 - **UI:**
   - `/rewards`: `components/rewards-client.tsx`. It redeems through a confirm dialog, then calls `router.refresh()`.
   - In the lesson view:
@@ -145,13 +148,14 @@ npm run lint         # eslint . (flat config in eslint.config.mjs; one file: npx
   - The header has a Rewards link.
 - **Accepted gaps:**
   - Users can still insert their own `roadmaps` rows with any `content`, so a determined user could make an easy fake roadmap and pass its quizzes. The daily cap and the 40-lesson cap limit the damage. If rewards ever have real value, roadmap writes must move server-side too.
-  - Quizzes can be passed by looking answers up. That's still more learning than a tick.
+  - Quizzes can be passed by looking answers up. That's still more learning than a tick. The same goes for the placement test, which is why it's always labelled a practice test, not an NSQF assessment.
+  - A user could write a `content.qualification.id` onto a roadmap they generated freely. It only changes what their own roadmap page and certificate say it "prepares for", and the certificate still says it isn't an NSQF qualification.
 
 ### AI routes (Gemini)
 - All Gemini calls go through `lib/gemini.ts`, built on the `@google/genai` SDK:
   - `generateText(contents, { systemInstruction, temperature, json })` handles single prompts and multi-turn `Content[]`.
-  - `generateJson(prompt)` uses JSON response mode, then `extractJsonPayload` (a fenced block, else the outermost `{...}`). It throws `ModelOutputError` on non-JSON.
-- **Every JSON route validates with zod before using the output:** `generate-roadmap`, `quiz/start` (via `lib/quiz.ts`), `recap`, `generate-in-depth`, `nsqf/ai-roadmap`. Keep response shapes stable: client components read `response`, `text`, `content`, `quiz` and `roadmap` directly.
+  - `generateJson(prompt, opts?)` uses JSON response mode, then `extractJsonPayload` (a fenced block, else the outermost `{...}`). It throws `ModelOutputError` on non-JSON.
+- **Every JSON route validates with zod before using the output:** `generate-roadmap`, `quiz/start` (via `lib/quiz.ts`), `placement/start` (via `generatePlacementTest`), `recap`, `generate-in-depth`. Keep response shapes stable: client components read `response`, `text`, `content`, `quiz` and `roadmap` directly.
 - **Resilience** (`generateText`):
   - Retries 429/5xx, then falls back through `GEMINI_FALLBACK_MODELS` (default `gemini-3.5-flash-lite, gemini-3.7-flash, gemini-3.8-flash, gemini-3.5-flash`).
   - A 404 (model not offered to this key; `gemini-2.5-flash` is closed to new users) or a used-up *daily* quota skips straight to the next model.
@@ -159,25 +163,38 @@ npm run lint         # eslint . (flat config in eslint.config.mjs; one file: npx
   - Client components show the server's `error` text (with "Try again" where it makes sense); never fail silently.
 - **Free-tier keys** have small per-minute and per-day limits *per model*. Heavy testing exhausts them quickly. Use the stub (`GEMINI_BASE_URL`) for automated runs.
 - **Learner-grounded AI:**
-  - `lib/learner.ts`: `loadLearner()` returns one snapshot (profile, roadmaps with per-topic completion, hours, streak, last-7-days activity, goals, points and rewards). `describeLearner()` turns it into prompt context, marking demo rewards as such.
-  - These use it: `/api/mentor` (AI Mentor chat), `/api/career-guidance` (when `rag` is true, it adds the snapshot plus NSQF reference data), and the AI Mentor and Career Guidance pages.
-- **Other AI routes:** `/api/resume-match` (score, strengths, gaps, courses) and `/api/career-compare` (two paths: roles, LPA ranges, demand, months to job-ready). Both are zod-validated.
+  - `lib/learner.ts`: `loadLearner()` returns one snapshot (profile, tested-or-estimated `level`, roadmaps with per-topic completion and linked qualification, hours, streak, last-7-days activity, goals, points and rewards). `describeLearner()` turns it into prompt context, marking demo rewards and estimated levels as such.
+  - These use it: `/api/mentor` (AI Mentor chat), `/api/career-guidance` (when `rag` is true, it adds the snapshot, the official level descriptors and the qualification catalogue, and tells the model to recommend only listed qualifications by exact title), and the AI Mentor and Career Guidance pages.
+- **Other AI routes:** `/api/resume-match` (score, strengths, gaps, courses) and `/api/career-compare` (two paths: roles, LPA ranges, demand, months to job-ready). Both are zod-validated. Their NSQF levels (1–8) are labelled "AI estimate" in the UI.
 - **Badges:** `lib/achievements.ts` computes them from the snapshot. There's no badge table (see "Points and rewards").
-- **Personal NSQF path:** `lib/nsqf-path.ts` (`buildRoadmap`) is shared by `/api/nsqf/roadmap` and the Career Guidance tracker, which builds it from the user's onboarding answers.
 
 ### NSQF logic
-- **Supported level range:** the app assigns levels **3–6** only, defined once as `NSQF_MIN_LEVEL`, `NSQF_MAX_LEVEL` and `clampNsqfLevel()` in `lib/nsqf.ts`. Every route below uses them. Widening the range also requires adding rows to `data/*.json`.
-- `lib/nsqf.ts`: static descriptors for levels 1–6, returned by `getNsqfMapping()`.
-- `/api/generate-roadmap`: `computeNsqf()` is a heuristic based on experience and goal. The result is stored in `content.nsqf` and in the `nsqf_*` columns.
-- `/api/nsqf/roadmap`:
-  - Rule-based.
-  - Reads `data/nsqf-reference.json`. `data/nsqf-reference-marketing.json` overrides it per level, so marketing roles win.
-  - Builds a 3-step path that ends at L6.
-- `/api/nsqf/ai-roadmap`: the zod-validated AI path (exactly 3 nodes). `/nsqf/demo` saves it via `/api/nsqf/save-roadmap` into `roadmaps`.
-- `/api/nsqf/level`: reads and writes the user's current level. It is called by the NSQF ladder in `components/nsqf-roadmap.tsx`.
+The rule: **GyaanGuru never claims to award an NSQF level.** It shows a level the learner *tested* at, real qualifications to aim for, and how to take the official assessment. Everything else is labelled an estimate.
+- **Supported level range:** the app assigns levels **3–6** only, defined once as `NSQF_MIN_LEVEL`, `NSQF_MAX_LEVEL` and `clampNsqfLevel()` in `lib/nsqf.ts`. The catalogue and placement test cover this band; widening it means adding qualifications and placement bands.
+- **Official descriptors** (`lib/nsqf.ts`): the NCVET table for levels 1–8 (NSQF revised in 2023, with half levels), copied from https://nqr.gov.in/level-descriptors: five domains per level plus the typical entry education. `getNsqfDescriptor(level)` (a half level uses the level above, as the official table groups them) and `describeNsqfLevel(level)` for prompts.
+- **Qualification catalogue** (`data/qualifications.json`, loaded and zod-checked by `lib/qualifications.ts`):
+  - 31 real qualifications in 4 tracks (`software`, `data-ai`, `infra`, `marketing`), copied from their National Qualifications Register pages on `checkedOn`. Each has its NQR code, exact level (e.g. 4.5), awarding and certifying body, hours, approval dates, eligibility rows, units (NOS) and the qualification-file PDF.
+  - Units carry `mandatory` and `core`; `core: false` marks employability skills, OJT, introductions and generic workplace-safety units, which roadmaps don't teach.
+  - **Band:** `levelBand(level)` = the level rounded up (4.5 → 5), matching the official table's grouping.
+  - **Expiry:** `isCurrent(q, today)` hides anything past `validTill`. The Media & Entertainment (marketing) qualifications expire in Feb 2027, so refresh the catalogue before then: re-read each NQR page, update the entries and `checkedOn`, never type values from memory.
+  - Helpers: `ladder(track)`, `recommend(track, band)`, `guessTrack(text)` (whole-word keyword match), `suggestQualifications`, `rankQualifications`, `examplesByBand`, `coreUnits`, `formatLevel`, and the NQR / Skill India links.
+- **Placement test** (`/placement` → `/api/placement/start` → `/api/placement/submit`; rules and marking in `lib/placement.ts`, generation in `lib/quiz.ts`):
+  - 3 questions at each band 3–6 of one track (12 in all), each built on a real unit of a qualification at that band and pitched at the official descriptor. The prompt contains only catalogue data. zod rejects output without exactly 3 valid-unit questions per band (502). Options are shuffled on the server.
+  - Stored with answers in `placement_tests` (server-only). The browser gets band, question and options only.
+  - A band passes with 2 of 3. **Placed** = the highest band passed along with every band below it, else 3; **target** = placed + 1 (max 6), or 3 if band 3 failed.
+  - 30 minutes to submit, one submit (409 after, 410 when expired), 3 starts per India day (429).
+  - Onboarding's Finish goes to `/placement?welcome=1`, which can be skipped.
+- **The learner's level** (`resolveLevel` in `lib/learner.ts`): `"tested"` from `placement_result()`, else `"estimated"` (a legacy `current_nsqf_level`, else the official entry level for their education via `estimateLevelFromEducation`, else their highest roadmap level). The dashboard, `/generate`, `/placement`, `/nsqf/demo` and Career Guidance all use it, and the UI always shows which kind it is.
+- **Roadmaps on a qualification** (`/api/generate-roadmap`, body zod-validated, optional `qualificationId`):
+  - Unknown or expired id → 400. The prompt asks for exactly one module per core unit, in order; a wrong count → 502. The server writes `modules[i].unit`, `content.qualification` and `nsqf_level = levelBand(level)`.
+  - Without a qualification, `estimateNsqf()` (experience and goal) gives an estimated level, stored with `source: "estimate"`.
+  - `/generate?qualification=<id>` preselects one; `components/qualification-picker.tsx` suggests matches for the topic during render.
+  - Lesson quizzes on a linked roadmap add the unit's official title to the prompt (`lessonUnit()`, looked up in the catalogue by code).
+- **Getting certified** (`components/certification-handoff.tsx`, `#get-certified` on the roadmap page): eligibility rows, the qualification file, Skill India Digital Hub courses and training centres, and the awarding body's assessment, plus an honest hours comparison. It asks the learner to verify the roadmap first until they have. The verified card and the bonus checklist link to it. The certificate page says "Prepares for" and that it isn't an NSQF qualification.
+- **Paths** (`lib/nsqf-path.ts`, `buildPath`): one real qualification per band from the learner's level up to 6 in a track, with alternatives. Used by the public `/api/nsqf/roadmap`, the `/nsqf/demo` path planner (no AI) and the Career Guidance tracker (`components/nsqf-roadmap.tsx`).
 
 ### Main user flow
-1. `/generate` → `components/roadmap-generator.tsx` → `POST /api/generate-roadmap`, which generates the roadmap and inserts it into `roadmaps`.
+1. `/generate` → `components/roadmap-generator.tsx` → `POST /api/generate-roadmap`, which generates the roadmap, inserts it into `roadmaps`, and the form then navigates to `/roadmap/[id]`.
 2. `/roadmap/[id]`: the server component loads the roadmap and passes it to `components/roadmap-visualization.tsx`.
    - This is a large client component (~900 lines) and the hub of the learning UI.
    - It handles progress (`/api/progress`), in-depth notes (SWR → `/api/generate-in-depth`), the AI instructor (`/api/ai-instructor`), server-marked quizzes (`/api/quiz/start` and `/api/quiz/submit`), the bonus checklist and YouTube lectures.
@@ -188,6 +205,7 @@ npm run lint         # eslint . (flat config in eslint.config.mjs; one file: npx
 ### Static or mock areas
 - Jobs show built-in sample listings until `ADZUNA_APP_ID` / `ADZUNA_APP_KEY` are set.
 - The six `demo` rewards in `reward_catalog` deliver nothing; only the three `perk` items do something.
+- The qualification catalogue is a static snapshot of the National Qualifications Register (see "NSQF logic"); it doesn't update itself.
 - `@vercel/analytics` requests `/_vercel/insights/script.js`, which 404s anywhere except on Vercel. That's expected.
 
 ## Local end-to-end testing

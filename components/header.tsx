@@ -17,11 +17,11 @@ const memberLinks = [
   { href: "/jobs", label: "Jobs", icon: Briefcase, tone: "text-lagoon-ink" },
   { href: "/career-guidance", label: "Career Guidance", icon: Compass, tone: "text-leaf-ink" },
   { href: "/rewards", label: "Rewards", icon: Gift, tone: "text-bubblegum-ink" },
-  { href: "/nsqf/demo", label: "NSQF Demo", icon: Layers, tone: "text-marigold-ink" },
+  { href: "/nsqf/demo", label: "NSQF path", icon: Layers, tone: "text-marigold-ink" },
 ]
 
 const guestLinks = [
-  { href: "/nsqf/demo", label: "NSQF Demo", icon: Layers, tone: "text-marigold-ink" },
+  { href: "/nsqf/demo", label: "NSQF path", icon: Layers, tone: "text-marigold-ink" },
   { href: "/jobs", label: "Jobs", icon: Briefcase, tone: "text-lagoon-ink" },
 ]
 

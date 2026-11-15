@@ -88,7 +88,7 @@ export function CareerPathSimulator() {
                     <p className="font-display text-lg font-extrabold text-ink">{o.course}</p>
                   </div>
                   <span className="shrink-0 rounded-full border-2 border-ink bg-marigold px-2.5 py-0.5 text-xs font-black text-ink">
-                    NSQF L{o.nsqfLevel}
+                    ≈ NSQF L{o.nsqfLevel} (AI estimate)
                   </span>
                 </div>
                 <div className="flex flex-wrap gap-1.5">

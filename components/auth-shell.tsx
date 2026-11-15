@@ -7,7 +7,7 @@ import { HandNote, Sticker, Tape } from "@/components/doodles"
 const perks = [
   "A roadmap sized to your weekly hours",
   "Lessons, quizzes and an instructor for each topic",
-  "NSQF level, points and progress in one place",
+  "A tested NSQF level, points and progress in one place",
 ]
 
 /** Split layout for sign-in / sign-up: notebook brand panel with illustration + form column. */

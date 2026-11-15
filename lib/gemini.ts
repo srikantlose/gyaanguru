@@ -121,8 +121,8 @@ export function extractJsonPayload(text: string): string {
 }
 
 /** Generates and parses a JSON response. Throws ModelOutputError if the output is not valid JSON. */
-export async function generateJson(prompt: string): Promise<unknown> {
-  const text = await generateText(prompt, { json: true })
+export async function generateJson(prompt: string, opts: Omit<GenerateOptions, "json"> = {}): Promise<unknown> {
+  const text = await generateText(prompt, { ...opts, json: true })
   try {
     return JSON.parse(extractJsonPayload(text))
   } catch {
