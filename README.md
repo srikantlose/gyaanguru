@@ -98,7 +98,7 @@ sequenceDiagram
     A->>S: check the session
     A->>G: ask for a roadmap as JSON
     G-->>A: modules and lessons
-    A->>A: validate the shape; one module per unit if a qualification was picked
+    A->>A: validate the shape (one module per unit if a qualification was picked)
     A->>S: save to roadmaps (only your rows)
     A-->>P: roadmap and its id
     P-->>L: open the roadmap
