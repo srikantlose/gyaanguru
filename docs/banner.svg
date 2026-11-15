@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 400" role="img" aria-labelledby="t d">
   <title id="t">GyaanGuru</title>
-  <desc id="d">Personal learning roadmaps for India, mapped to NSQF levels. A learner climbs coloured steps labelled L3 to L6 toward a flag.</desc>
+  <desc id="d">Personal learning roadmaps for India, built on real NSQF qualifications. A learner climbs coloured steps labelled L3 to L6 toward a flag.</desc>
   <defs>
     <pattern id="rules" width="32" height="32" patternUnits="userSpaceOnUse">
       <line x1="0" y1="31.5" x2="32" y2="31.5" stroke="#c8dbf0" stroke-width="1"/>
@@ -37,7 +37,7 @@
   <!-- highlighted tagline -->
   <path d="M106 214 C 300 206, 520 210, 690 206 L 692 252 C 520 256, 300 252, 104 258 Z" fill="#ffc83d" opacity="0.85"/>
   <text x="116" y="242" class="body" font-size="27" font-weight="800" fill="#15171e">Personal learning roadmaps for India,</text>
-  <text x="116" y="290" class="body" font-size="27" font-weight="800" fill="#15171e">mapped to NSQF levels.</text>
+  <text x="116" y="290" class="body" font-size="27" font-weight="800" fill="#15171e">built on real NSQF qualifications.</text>
   <path d="M116 302 C 190 296, 260 308, 340 300 S 420 296, 448 301" fill="none" stroke="#ff7a66" stroke-width="5" stroke-linecap="round"/>
 
   <!-- stack stickers -->

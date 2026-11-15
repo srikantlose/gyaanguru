@@ -19,6 +19,7 @@ npm run build        # next build (fails on type errors)
 npm run start        # next start
 npm run typecheck    # tsc --noEmit
 npm run lint         # eslint . (flat config in eslint.config.mjs; one file: npx eslint <path>)
+npm run refresh:qualifications   # re-read data/qualifications.json from nqr.gov.in (dry run; see "NSQF logic")
 ```
 
 - **No automated test suite.** Verify with `typecheck`, `lint`, `build` and a run of the app. See "Local end-to-end testing" below.
@@ -89,7 +90,7 @@ npm run lint         # eslint . (flat config in eslint.config.mjs; one file: npx
   - Rows are keyed by array position, not by topic `id`. Reordering a roadmap's modules or topics would orphan progress rows.
   - Un-completing a topic deletes its row.
   - Users can only read it. Rows are written by `complete_topic()` / `uncomplete_topic()` (which check that the lesson exists in the roadmap's `content`) and by `award_lesson_quiz()` when a quiz is passed.
-- `/api/onboarding` returns `412 SchemaNotMigrated` when the onboarding columns are missing. `/api/progress` and `/api/rewards` do the same when the points tables or functions are missing.
+- `/api/onboarding` returns `412 SchemaNotMigrated` when the onboarding columns are missing. `/api/progress` and `/api/rewards` do the same when the points tables or functions are missing, and the placement routes when `placement_tests` is missing (checked before any Gemini call).
 
 ### Points and rewards
 - **Points are for proof of learning, not ticks.** Ticking a lesson only tracks progress and pays nothing.
@@ -176,7 +177,8 @@ The rule: **GyaanGuru never claims to award an NSQF level.** It shows a level th
   - 31 real qualifications in 4 tracks (`software`, `data-ai`, `infra`, `marketing`), copied from their National Qualifications Register pages on `checkedOn`. Each has its NQR code, exact level (e.g. 4.5), awarding and certifying body, hours, approval dates, eligibility rows, units (NOS) and the qualification-file PDF.
   - Units carry `mandatory` and `core`; `core: false` marks employability skills, OJT, introductions and generic workplace-safety units, which roadmaps don't teach.
   - **Band:** `levelBand(level)` = the level rounded up (4.5 → 5), matching the official table's grouping.
-  - **Expiry:** `isCurrent(q, today)` hides anything past `validTill`. The Media & Entertainment (marketing) qualifications expire in Feb 2027, so refresh the catalogue before then: re-read each NQR page, update the entries and `checkedOn`, never type values from memory.
+  - **Expiry:** `isCurrent(q, today)` hides anything past `validTill`. Five of the marketing track's qualifications (Media & Entertainment) expire on 23 Feb 2027, which leaves that track with nothing at levels 4–6.
+  - **Refreshing:** `scripts/refresh-qualifications.mjs` (`npm run refresh:qualifications`) re-reads every entry from its NQR page and reports changes, anything expiring within 120 days, and tracks with an empty level. `-- --write` rewrites the file and `checkedOn`; `--add <page id>:<track>` and `--remove nqr-<id>` edit the list; `--discover` lists current IT-ITeS and Media qualifications at levels 2.5–6 that aren't in the file. Never type catalogue values by hand.
   - Helpers: `ladder(track)`, `recommend(track, band)`, `guessTrack(text)` (whole-word keyword match), `suggestQualifications`, `rankQualifications`, `examplesByBand`, `coreUnits`, `formatLevel`, and the NQR / Skill India links.
 - **Placement test** (`/placement` → `/api/placement/start` → `/api/placement/submit`; rules and marking in `lib/placement.ts`, generation in `lib/quiz.ts`):
   - 3 questions at each band 3–6 of one track (12 in all), each built on a real unit of a qualification at that band and pitched at the official descriptor. The prompt contains only catalogue data. zod rejects output without exactly 3 valid-unit questions per band (502). Options are shuffled on the server.

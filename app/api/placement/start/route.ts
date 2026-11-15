@@ -13,6 +13,8 @@ import {
   type PublicPlacementQuestion,
 } from "@/lib/placement"
 import { TRACK_IDS } from "@/lib/qualifications"
+import { PLACEMENT_SCHEMA_MESSAGE } from "@/lib/placement"
+import { isSchemaMissing } from "@/lib/rewards"
 
 const StartSchema = z.object({ track: z.enum(TRACK_IDS) })
 
@@ -41,11 +43,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: ADMIN_MISSING_MESSAGE, code: "QuizNotConfigured" }, { status: 503 })
     }
 
-    const { count } = await admin
+    const { count, error: countError } = await admin
       .from("placement_tests")
       .select("id", { count: "exact", head: true })
       .eq("user_id", user.id)
       .gte("created_at", startOfIndianDay())
+    // Check before spending a Gemini call: the table only exists once schema.sql has been run.
+    if (isSchemaMissing(countError)) {
+      return NextResponse.json({ error: PLACEMENT_SCHEMA_MESSAGE, code: "SchemaNotMigrated" }, { status: 412 })
+    }
     if ((count ?? 0) >= PLACEMENT_STARTS_PER_DAY) {
       return NextResponse.json(
         { error: `You've started ${PLACEMENT_STARTS_PER_DAY} placement tests today. Come back tomorrow for another go.` },

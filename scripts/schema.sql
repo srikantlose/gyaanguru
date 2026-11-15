@@ -3,9 +3,10 @@
 -- Run this whole file in the Supabase SQL editor. It is idempotent: safe to re-run,
 -- and it upgrades databases created with the older scripts/00x_*.sql migrations.
 --
--- Tables: profiles, roadmaps, progress, plus point_events, reward_catalog and
--- reward_redemptions for points and rewards. NSQF reference data is read from
--- data/*.json by the app, so no reference table is needed.
+-- Tables: profiles, roadmaps, progress; point_events, reward_catalog and reward_redemptions
+-- for points and rewards; lesson_views, lesson_quizzes, roadmap_recaps and placement_tests
+-- (server-only) for proof of learning and the NSQF placement test. The NSQF qualification
+-- catalogue is data/qualifications.json in the app, so no reference table is needed.
 
 -- ---------------------------------------------------------------------------
 -- profiles: one row per auth user, created by the on_auth_user_created trigger
@@ -17,7 +18,7 @@ create table if not exists public.profiles (
   points integer not null default 0,
   onboarded boolean not null default false,
   onboarded_at timestamptz,
-  onboarding_data jsonb, -- onboarding form answers; also holds current_nsqf_level
+  onboarding_data jsonb, -- onboarding form answers (a legacy current_nsqf_level here is only an estimate)
   created_at timestamptz not null default now()
 );
 
@@ -97,7 +98,7 @@ create table if not exists public.roadmaps (
   goal text,
   time_commitment text,
   additional_info text,
-  content jsonb not null, -- { title, description, modules: [{ id, title, topics: [...] }], nsqf? }
+  content jsonb not null, -- { title, description, modules: [{ id, title, unit?, topics: [...] }], nsqf?, qualification? }
   nsqf_level integer,
   nsqf_description text,
   created_at timestamptz not null default now()

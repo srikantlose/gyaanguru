@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/banner.svg" alt="GyaanGuru: personal learning roadmaps for India, mapped to NSQF levels" width="100%">
+  <img src="docs/banner.svg" alt="GyaanGuru: personal learning roadmaps for India, built on real NSQF qualifications" width="100%">
 </p>
 
 GyaanGuru turns "I want to learn X" into a plan you can follow week by week.
@@ -11,7 +11,7 @@ It's one Next.js app, with Supabase for accounts and data and Google Gemini for 
 <table>
   <tr>
     <td width="50%"><img src="docs/screenshots/home-hero.jpg" alt="Home page: 'Plan it. Learn it. Level up.' next to a notebook page showing a learner climbing NSQF steps L3 to L6"></td>
-    <td width="50%"><img src="docs/screenshots/dashboard.jpg" alt="Dashboard with points, roadmaps, topics done and NSQF level, plus a roadmap card at 6% progress"></td>
+    <td width="50%"><img src="docs/screenshots/dashboard.jpg" alt="Dashboard with points, roadmaps, topics done and a tested NSQF level of 4, plus a Business Intelligence Analyst roadmap tagged NSQF 5 qualification at 25%"></td>
   </tr>
   <tr>
     <td><sub>The home page. The ruled paper turns into graph paper under your cursor, and the stickers can be dragged around.</sub></td>
@@ -46,12 +46,33 @@ It's one Next.js app, with Supabase for accounts and data and Google Gemini for 
 
 <table>
   <tr>
-    <td width="50%"><img src="docs/screenshots/lesson.jpg" alt="A lesson from an Excel roadmap with the NSQF Level 4 banner, the course outline and the lesson content"></td>
-    <td width="50%"><img src="docs/screenshots/mentor.jpg" alt="AI Mentor replying with a three-day study plan that names the learner's next lesson"></td>
+    <td width="50%"><img src="docs/screenshots/lesson.jpg" alt="A lesson from a Business Intelligence Analyst roadmap: the Prepares for a real NSQF qualification banner with its NQR code, the outline with a unit code on each module, and the lesson content"></td>
+    <td width="50%"><img src="docs/screenshots/mentor.jpg" alt="AI Mentor replying with a week-long study plan that names the learner's roadmap and next lesson"></td>
   </tr>
   <tr>
-    <td><sub>A real roadmap Gemini wrote for "Excel for office jobs" (a free-topic roadmap, so its NSQF level is an estimate).</sub></td>
+    <td><sub>A real roadmap Gemini wrote for the Business Intelligence Analyst qualification (NSQF 5): one module per official unit, each tagged with its unit code.</sub></td>
     <td><sub>The AI Mentor uses your actual roadmap and next lesson to plan your week.</sub></td>
+  </tr>
+</table>
+
+## Real NSQF qualifications, honestly
+
+GyaanGuru never hands out NSQF levels. Every level on screen is one of three kinds, and it says which:
+
+- **Tested**: the placement test asks 12 questions, three at each of levels 3 to 6, built from the units of real qualifications in your track. The server marks it, so the answers never reach your browser. Your level is the highest one you pass along with every level below it. It's a practice test, not an official assessment.
+- **Real**: a roadmap built on a qualification carries that qualification's own level, copied from the [National Qualifications Register](https://www.nqr.gov.in/). The app ships 31 of them in four tracks (software, data and AI, cloud and security, digital marketing) in [`data/qualifications.json`](data/qualifications.json).
+- **Estimated**: anything untested, like a free-topic roadmap or a learner who hasn't taken the test, is labelled as an estimate.
+
+When you finish a roadmap built on a qualification, the page walks you to the real certificate: the entry routes, the qualification file, Skill India Digital Hub's courses and training centres, and the awarding body's assessment. Only the awarding body can certify you.
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/placement.jpg" alt="Placement test result: tested at NSQF level 4 in Data and AI, with scores per level (3 of 3, 3 of 3, 1 of 3, 1 of 3), the official descriptor, and real level-5 qualifications to aim for next"></td>
+    <td width="50%"><img src="docs/screenshots/handoff.jpg" alt="Get the official certificate card for Business Intelligence Analyst: who awards it, the entry routes, the qualification file, Skill India links, the assessment, and an honest hours comparison"></td>
+  </tr>
+  <tr>
+    <td><sub>A placement result. Each level's three questions come from real qualification units.</sub></td>
+    <td><sub>The last section of a qualification roadmap: how to get the official certificate.</sub></td>
   </tr>
 </table>
 
@@ -181,11 +202,11 @@ The rewards page has three perks that do something: a **Streak Freeze** that cov
 <table>
   <tr>
     <td width="58%"><img src="docs/screenshots/rewards.jpg" alt="Rewards page: balance, earned, spent and roadmaps-finished tiles, then coupon-style cards for Streak Freeze, Completion Certificate and Sticker Pack"></td>
-    <td width="42%"><img src="docs/screenshots/certificate.jpg" alt="A printable completion certificate for the roadmap 'Python for Data Analysis', with NSQF level, lessons, study hours and a rubber stamp"></td>
+    <td width="42%"><img src="docs/screenshots/certificate.jpg" alt="A printable GyaanGuru completion certificate for a Business Intelligence Analyst roadmap: prepares for an NSQF 5 qualification, lessons, study hours, a rubber stamp, and a note that it is not an NSQF qualification"></td>
   </tr>
   <tr>
     <td><sub>The rewards page. Perks unlock as soon as you redeem them.</sub></td>
-    <td><sub>A completion certificate, ready to print or save as PDF.</sub></td>
+    <td><sub>A completion certificate, ready to print or save as PDF. It names the real qualification and says it isn't one.</sub></td>
   </tr>
 </table>
 
@@ -249,6 +270,7 @@ The rewards page has three perks that do something: a **Streak Freeze** that cov
 | `npm run build` / `npm run start` | Production build, then serve it. The build fails on type errors. |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run lint` | ESLint |
+| `npm run refresh:qualifications` | Re-read the NSQF qualification catalogue from nqr.gov.in (dry run; `-- --write` saves) |
 
 ## Where things live
 
@@ -262,6 +284,9 @@ app/
 components/
   roadmap-visualization.tsx   the lesson view: outline, notes, quiz, instructor, videos
   roadmap-verify.tsx          the bonus checklist: quiz status and the recap
+  placement-client.tsx        the NSQF placement test
+  qualification-picker.tsx    "target a real qualification" on the generate page
+  certification-handoff.tsx   how to get the official certificate
   mentor-client.tsx           AI Mentor
   rewards-client.tsx          points, perks, badges and points history
   illustrations.tsx  doodles.tsx  page-header.tsx   the notebook look
@@ -274,6 +299,7 @@ lib/
   placement.ts    placement test rules and marking
   nsqf-path.ts  achievements.ts  rewards.ts  quiz.ts
 scripts/schema.sql   the whole database, idempotent
+scripts/refresh-qualifications.mjs   re-reads the qualification catalogue from nqr.gov.in
 data/qualifications.json   real NSQF qualifications copied from nqr.gov.in
 ```
 
@@ -282,7 +308,7 @@ data/qualifications.json   real NSQF qualifications copied from nqr.gov.in
 - **Gemini limits.** A free key goes a long way for one person, but heavy use, or running tests against it, can use up a model's daily allowance. The app falls back to other models and tells you when they're all busy. Turning on billing for the key raises the limits.
 - **Emails.** Supabase's built-in email sender only delivers to people on your Supabase team, a few per hour. That's enough for testing password resets on your own account. To email anyone else, add your own SMTP server under **Authentication → Emails**.
 - **NSQF levels.** The framework (revised in 2023) runs from 1 to 8, with half levels such as 4.5. GyaanGuru works with levels 3–6. It never awards a level: a learner's level is either *tested* (the placement test, a practice test) or *estimated*, and the screens say which. Only an awarding body can certify an NSQF qualification.
-- **Qualification data** is a snapshot of the National Qualifications Register (the date is in `data/qualifications.json`). Qualifications expire and get new versions, so it needs refreshing from nqr.gov.in now and then; anything past its approval date is hidden automatically.
+- **Qualification data** is a snapshot of the National Qualifications Register (the date is in `data/qualifications.json`). Qualifications expire and get new versions, so it needs refreshing now and then: `npm run refresh:qualifications` re-reads every entry from nqr.gov.in and reports what changed or is about to expire (add `-- --write` to save). Anything past its approval date is hidden automatically.
 - **Grounding, not search.** The career chat and mentor use your profile, your progress, the official level descriptors and the qualification catalogue. They don't search the web or any external documents.
 
 ## The look

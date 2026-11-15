@@ -12,6 +12,9 @@ export const PLACEMENT_STARTS_PER_DAY = 3
 
 export type PlacementBand = (typeof PLACEMENT_BANDS)[number]
 
+export const PLACEMENT_SCHEMA_MESSAGE =
+  "The placement test isn't set up in the database yet. Run scripts/schema.sql in the Supabase SQL editor, then reload."
+
 /** A stored question. The answer and explanation never leave the server before submitting. */
 export type PlacementQuestion = {
   band: PlacementBand

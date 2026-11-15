@@ -2,7 +2,8 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 import { createClient } from "@/lib/supabase/server"
 import { ADMIN_MISSING_MESSAGE, createAdminClient } from "@/lib/supabase/admin"
-import { PLACEMENT_TIME_LIMIT_MINUTES, scorePlacement, type PlacementQuestion } from "@/lib/placement"
+import { PLACEMENT_SCHEMA_MESSAGE, PLACEMENT_TIME_LIMIT_MINUTES, scorePlacement, type PlacementQuestion } from "@/lib/placement"
+import { isSchemaMissing } from "@/lib/rewards"
 
 const SubmitSchema = z.object({
   testId: z.uuid(),
@@ -31,12 +32,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: ADMIN_MISSING_MESSAGE, code: "QuizNotConfigured" }, { status: 503 })
     }
 
-    const { data: test } = await admin
+    const { data: test, error: readError } = await admin
       .from("placement_tests")
       .select("id, track, questions, created_at, submitted_at")
       .eq("id", testId)
       .eq("user_id", user.id)
       .maybeSingle()
+    if (isSchemaMissing(readError)) {
+      return NextResponse.json({ error: PLACEMENT_SCHEMA_MESSAGE, code: "SchemaNotMigrated" }, { status: 412 })
+    }
     if (!test) {
       return NextResponse.json({ error: "Placement test not found" }, { status: 404 })
     }
