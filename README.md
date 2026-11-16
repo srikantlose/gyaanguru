@@ -8,6 +8,8 @@ You tell it what you want to learn, where you're starting from and how many hour
 
 It's one Next.js app, with Supabase for accounts and data and Google Gemini for everything the AI writes.
 
+New to the project? The [study guide](docs/study-guide/index.html) explains it from scratch: the idea, the architecture, the AI layer, NSQF levels, points and rewards, security, setup, and how to present it. GitHub shows HTML files as source, so clone the repo (or download the folder) and open `docs/study-guide/index.html` in a browser.
+
 <table>
   <tr>
     <td width="50%"><img src="docs/screenshots/home-hero.jpg" alt="Home page: 'Plan it. Learn it. Level up.' next to a notebook page showing a learner climbing NSQF steps L3 to L6"></td>
@@ -301,6 +303,7 @@ lib/
 scripts/schema.sql   the whole database, idempotent
 scripts/refresh-qualifications.mjs   re-reads the qualification catalogue from nqr.gov.in
 data/qualifications.json   real NSQF qualifications copied from nqr.gov.in
+docs/study-guide/    the study guide (open index.html in a browser)
 ```
 
 ## Good to know

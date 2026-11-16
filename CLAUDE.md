@@ -210,6 +210,7 @@ The rule: **GyaanGuru never claims to award an NSQF level.** It shows a level th
 - The six `demo` rewards in `reward_catalog` deliver nothing; only the three `perk` items do something.
 - The qualification catalogue is a static snapshot of the National Qualifications Register (see "NSQF logic"); it doesn't update itself.
 - `@vercel/analytics` requests `/_vercel/insights/script.js`, which 404s anywhere except on Vercel. That's expected.
+- `docs/study-guide/` (`index.html` plus two PNG diagrams) is a standalone snapshot of the project as of Nov 2026. It isn't built from the code, so update it by hand when features change.
 
 ## Local end-to-end testing
 - Run local Supabase in Docker: `npx supabase init` and `npx supabase start` in a scratch directory. Excluding unneeded services with `-x` keeps it light.
