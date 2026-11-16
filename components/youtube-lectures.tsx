@@ -15,8 +15,10 @@ type VideoItem = {
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json())
 
-export function YouTubeLectures({ query, maxResults = 6 }: { query: string; maxResults?: number }) {
-  const key = query?.trim() ? `/api/youtube?query=${encodeURIComponent(query)}&maxResults=${maxResults}` : null
+/** `queries`: short searches, most specific first (see lib/video-query.ts); the server stops at the first that finds enough. */
+export function YouTubeLectures({ queries, maxResults = 6 }: { queries: string[]; maxResults?: number }) {
+  const qs = queries.map((q) => q.trim()).filter(Boolean)
+  const key = qs.length ? `/api/youtube?${qs.map((q) => `q=${encodeURIComponent(q)}`).join("&")}&maxResults=${maxResults}` : null
   const { data, error, isLoading } = useSWR(key, fetcher, { revalidateOnFocus: false })
 
   if (error) {
@@ -58,7 +60,20 @@ export function YouTubeLectures({ query, maxResults = 6 }: { query: string; maxR
     return (
       <Alert>
         <AlertTitle>No videos found</AlertTitle>
-        <AlertDescription>Try a different topic or expand your search terms.</AlertDescription>
+        <AlertDescription>
+          <span>
+            Nothing matched this lesson closely enough.{" "}
+            <a
+              href={`https://www.youtube.com/results?search_query=${encodeURIComponent(qs[qs.length - 1] ?? "")}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-primary underline underline-offset-2"
+            >
+              Search YouTube yourself
+            </a>
+            .
+          </span>
+        </AlertDescription>
       </Alert>
     )
   }

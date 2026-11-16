@@ -31,6 +31,7 @@ import { VisualRoadmap } from "./visual-roadmap"
 import { YouTubeLectures } from "./youtube-lectures" // new component for videos
 import { RichText } from "@/components/rich-text"
 import { QuizQuestions } from "@/components/quiz-questions"
+import { videoQueries } from "@/lib/video-query"
 import type { QualificationRef } from "@/lib/qualifications"
 
 interface RoadmapData {
@@ -762,7 +763,12 @@ export function RoadmapVisualization({ roadmap, roadmapId, onReset }: RoadmapVis
                 <CardContent className="p-6">
                   <h3 className="mb-4 text-lg font-semibold">Video Lectures</h3>
                   <YouTubeLectures
-                    query={`${roadmap.title} ${roadmap.modules[selectedTopic.moduleIndex].title} ${currentTopic.title} tutorial`}
+                    queries={videoQueries({
+                      lessonTitle: currentTopic.title,
+                      moduleTitle: roadmap.modules[selectedTopic.moduleIndex].title,
+                      roadmapTitle: roadmap.title,
+                      qualificationTitle: roadmap.qualification?.title,
+                    })}
                     maxResults={6}
                   />
                 </CardContent>

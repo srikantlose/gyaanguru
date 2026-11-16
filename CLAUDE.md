@@ -200,6 +200,7 @@ The rule: **GyaanGuru never claims to award an NSQF level.** It shows a level th
 2. `/roadmap/[id]`: the server component loads the roadmap and passes it to `components/roadmap-visualization.tsx`.
    - This is a large client component (~900 lines) and the hub of the learning UI.
    - It handles progress (`/api/progress`), in-depth notes (SWR → `/api/generate-in-depth`), the AI instructor (`/api/ai-instructor`), server-marked quizzes (`/api/quiz/start` and `/api/quiz/submit`), the bonus checklist and YouTube lectures.
+   - **YouTube lectures:** `videoQueries()` (`lib/video-query.ts`) builds up to 3 short queries (lesson + subject, lesson, module) with unit codes and filler stripped; `/api/youtube` tries them in order and stops once it has 3 videos. Don't send the whole roadmap + module + lesson title as one query: YouTube returns nothing for it.
    - `components/visual-roadmap.tsx` renders the same data with `@xyflow/react`. Custom nodes need `<Handle>`s with ids matching each edge's `sourceHandle`/`targetHandle`, or edges silently don't render.
 3. `/dashboard` computes completion per roadmap from one `progress` query: rows ÷ topics in `content.modules`.
 - **Onboarding and profile autosave:** triggered from edit handlers (`update`), never from an effect on the form state. An effect would also fire on mount and could overwrite saved answers with the empty form.
